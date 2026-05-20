@@ -37,14 +37,14 @@ services:
   # ========================
   # BACKEND API
   # ========================
-  munidm_server:
-    build: ./server
-    image: abdulrahman939291/server
-    container_name: munidm_server
+  munidm_backend:
+    build: ./backend
+    image: abdulrahman939291/backend
+    container_name: munidm_backend
     restart: always
 
     env_file:
-      - ./server/.env
+      - ./backend/.env
 
     environment:
       MYSQL_HOST: munidm_db
@@ -79,7 +79,7 @@ services:
       VITE_BACKEND_URL: https://api.munidm.fr
 
     depends_on:
-      - munidm_server
+      - munidm_backend
 
     networks:
       - shared-network
