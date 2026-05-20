@@ -1,0 +1,66 @@
+# Environment variables (SECRETS - DO NOT GIT)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*
+frontend/.env
+backend/.env
+
+
+
+
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor folders
+.vscode/
+.idea/
+.DS_Store
+
+# 📦 Node modules
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+
+# 🏗 Build folders
+dist/
+build/
+frontend/build/
+backend/build/
+
+
+docs/docs.md
+
+# 🧪 Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 💻 OS files
+.DS_Store
+Thumbs.db
+
+# 🧠 IDE / Editor
+.vscode/
+.idea/
+
+# 🔐 Secrets / keys
+*.pem
+*.key
+
+
+
+# 📁 Temporary files
+tmp/
+temp/
+frontend/.env*
+backend/.env*
+
+docs/

@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+
+
+.dark body {
+  background-color: #020617 !important;
+  color: white !important;
+}
+
+.dark .text-gray-700 {
+  color: white !important;
+}
+
+.dark .bg-white {
+  background-color: #020617 !important;
+}
+
+.dark h1, h2,h3,h4{
+  color: var(--color-slate-600) !important;
+}

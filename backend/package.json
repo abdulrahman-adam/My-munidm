@@ -1,0 +1,31 @@
+{
+  "name": "wehda",
+  "version": "1.0.0",
+  "description": "Scalable full-stack e-commerce application featuring a showcase website, admin dashboard with full CRUD for products, shopping cart system, order tracking, and online payment integration. Includes DevOps practices with CI/CD pipelines and Docker containerization",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node main.js",
+    "server": "nodemon main.js",
+    "app": "node main.js"
+  },
+  "author": "abdulrahman",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.3",
+    "cloudinary": "^2.9.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^4.22.1",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.1.1",
+    "mysql2": "^3.22.1",
+    "nodemailer": "^8.0.7",
+    "nodemon": "^3.1.14",
+    "sequelize": "^6.37.8",
+    "stripe": "^22.0.2"
+  }
+}
