@@ -1,113 +1,195 @@
-
-
-
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 
-// Register user
-export const register = async (req, res) => {
-    try {
-        const { name, email, password } = req.body;
 
-        if (!name || !email || !password) {
-            return res.json({ success: false, message: "Missing Details" });
-        }
+export const createUser = async (req, res) => {
 
-        // Sequelize findOne syntax uses a 'where' clause
-        const existingUser = await User.findOne({ where: { email } });
-        if (existingUser) {
-            return res.json({ success: false, message: "User already exists" });
-        }
+  try {
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+    const { name, email, phone, password, role } = req.body;
 
-        // Create user (role will default to 'USER' per the model we made)
-        const user = await User.create({ name, email, password: hashedPassword });
+    // check existing user
+    const existingUser = await User.findOne({
+      where: { email },
+    });
 
-        // IMPORTANT: MySQL uses 'id', not '_id'
-        const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
-
-        res.cookie('token', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
-            maxAge: 7 * 24 * 60 * 60 * 1000,
-        });
-
-        return res.json({ success: true, user: { email: user.email, name: user.name, role: user.role } });
-    } catch (error) {
-        console.error(error.message);
-        res.json({ success: false, message: error.message });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "User already exists",
+      });
     }
-}
 
-// Login user
-export const login = async (req, res) => {
-    try {
-        const { email, password } = req.body;
-        if (!email || !password) {
-            return res.json({ success: false, message: "Email and Password are required" });
-        }
+    // hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
-        // Sequelize findOne with where clause
-        const user = await User.findOne({ where: { email } });
+    // create user
+    const user = await User.create({
+      name,
+      email,
+      phone,
+      password_hash: hashedPassword,
+      role: role || "CASHIER",
+    });
 
-        if (!user) {
-            return res.json({ success: false, message: "Invalid email or password" });
-        }
+    return res.status(201).json({
+      success: true,
+      message: "User created successfully",
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
 
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.json({ success: false, message: "Invalid email or password" });
-        }
+  } catch (error) {
 
-        // Use user.id (MySQL standard)
-        const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
 
-        res.cookie('token', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
-            maxAge: 7 * 24 * 60 * 60 * 1000,
-        });
+export const getUsers = async (req, res) => {
 
-        return res.json({ success: true, user: { email: user.email, name: user.name, role: user.role } });
+  try {
 
-    } catch (error) {
-        console.error(error.message);
-        res.json({ success: false, message: error.message });
+    const users = await User.findAll({
+      attributes: {
+        exclude: ["password_hash", "otp_code", "otp_expire"],
+      },
+      order: [["created_at", "DESC"]],
+    });
+
+    return res.json({
+      success: true,
+      count: users.length,
+      users,
+    });
+
+  } catch (error) {
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
+export const getUserById = async (req, res) => {
+
+  try {
+
+    const { id } = req.params;
+
+    const user = await User.findByPk(id, {
+      attributes: {
+        exclude: ["password_hash", "otp_code", "otp_expire"],
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
     }
-}
 
-// Check Auth
-export const isAuth = async (req, res) => {
-    try {
-        const { userId } = req.body;
+    return res.json({
+      success: true,
+      user,
+    });
 
-        // Sequelize uses findByPk (Find By Primary Key) for IDs
-        const user = await User.findByPk(userId, {
-            attributes: { exclude: ['password'] } // This is how you select("-password")
-        });
+  } catch (error) {
 
-        return res.json({ success: true, user });
-    } catch (error) {
-        console.error(error.message);
-        res.json({ success: false, message: error.message });
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const updateUser = async (req, res) => {
+
+  try {
+
+    const { id } = req.params;
+
+    const user = await User.findByPk(id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
     }
-}
 
-// Logout
-export const logout = async (req, res) => {
-    try {
-        res.clearCookie('token', {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
-        });
-        return res.json({ success: true, message: "You are logged out" });
-    } catch (error) {
-        console.error(error.message);
-        res.json({ success: false, message: error.message });
+    const { name, email, phone, role, is_active } = req.body;
+
+    await user.update({
+      name: name ?? user.name,
+      email: email ?? user.email,
+      phone: phone ?? user.phone,
+      role: role ?? user.role,
+      is_active: is_active ?? user.is_active,
+    });
+
+    return res.json({
+      success: true,
+      message: "User updated successfully",
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        is_active: user.is_active,
+      },
+    });
+
+  } catch (error) {
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
+export const deleteUser = async (req, res) => {
+
+  try {
+
+    const { id } = req.params;
+
+    const user = await User.findByPk(id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
     }
-}
+
+    // soft delete
+    await user.update({
+      is_active: false,
+    });
+
+    return res.json({
+      success: true,
+      message: "User deactivated successfully",
+    });
+
+  } catch (error) {
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

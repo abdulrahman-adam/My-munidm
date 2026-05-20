@@ -8,8 +8,8 @@ import {
   deleteUser,
 } from "../controllers/userController.js";
 
-import { protect } from "../middlewares/authMiddleware.js";
-import { authorizeRoles } from "../middlewares/roleMiddleware.js";
+import { protect } from "../middleware/authMiddleware.js";
+import { authorizeRoles } from "../middleware/roleMiddleware.js";
 
 const userRouter = express.Router();
 
