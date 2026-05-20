@@ -36,10 +36,10 @@ connectCloudinary();
 
 // Add all versions of your domain here
 const allowedOrigins = [
-  'https://ayacodia.com',
-  'https://www.ayacodia.com',
-  'https://api.ayacodia.com', // Add this!
-  'https://db.ayacodia.com',   // Add this!
+  'https://munidm.fr',
+  'https://www.munidm.fr',
+  'https://api.munidm.fr', // Add this!
+  'https://db.munidm.fr',   // Add this!
   'http://localhost:5173',
   'http://localhost:5174',
   'http://109.176.199.234:5173'

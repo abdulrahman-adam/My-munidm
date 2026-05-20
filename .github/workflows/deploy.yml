@@ -19,7 +19,7 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            cd /var/www/oumabarar
+            cd /var/www/my-munidm
             git fetch --all
             git reset --hard origin/main
             
