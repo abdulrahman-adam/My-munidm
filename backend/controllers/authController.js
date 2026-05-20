@@ -2,6 +2,7 @@ import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { generateToken } from "../utils/jwt.js";
+import { sendEmail } from "../utils/sendEmail.js";
 
 
 
@@ -196,12 +197,16 @@ export const verifyOtp = async (req, res) => {
 
 
 // 🔐 Step 1: Send OTP for password reset
+
+
+// 🔐 Forgot Password (OTP Email)
 export const forgotPassword = async (req, res) => {
 
   try {
 
     const { email } = req.body;
 
+    // 1. find user
     const user = await User.findOne({ where: { email } });
 
     if (!user) {
@@ -218,16 +223,20 @@ export const forgotPassword = async (req, res) => {
       });
     }
 
-    // generate OTP
+    // 2. generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000);
 
+    // 3. save OTP
     user.otp_code = otp;
     user.otp_expire = new Date(Date.now() + 5 * 60 * 1000); // 5 min
-
     await user.save();
 
-    // TODO: send email or SMS here
-    console.log("Reset OTP:", otp);
+    // 4. send email
+    await sendEmail(
+      user.email,
+      "POS Password Reset OTP",
+      `Your OTP code is: ${otp}. It expires in 5 minutes.`
+    );
 
     return res.json({
       success: true,

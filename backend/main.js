@@ -9,12 +9,7 @@ import connectCloudinary from "./configs/cloudinary.js";
 
 // Routes
 import userRouter from "./routes/userRoute.js";
-import sellerRouter from "./routes/sellerRoute.js";
-import contactRouter from "./routes/contactRoute.js";
-import hourRouter from "./routes/hourRoute.js";
-import Hour from "./models/Hour.js";
-import partenaireRouter from "./routes/partenaireRoute.js";
-import mailRouter from "./routes/mailRoute.js";
+import authRouter from "./routes/authRoute.js";
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -75,32 +70,14 @@ app.use(express.urlencoded({ limit: '100mb', extended: true }));
 try {
     await sequelize.sync({ alter: true });
     console.log("✅ MySQL Tables Synchronized");
-
-    
-    // Check if table is empty and seed it automatically
-    const count = await Hour.count();
-    if (count === 0) {
-        const days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
-        const batch = days.map(day => ({
-            day_of_week: day,
-            open_time: '10:00:00',
-            close_time: '22:00:00',
-            is_closed: false
-        }));
-        await Hour.bulkCreate(batch);
-        console.log("✨ Miracle! Opening hours auto-initialized.");
-    }
 } catch (error) {
     console.error("❌ MySQL Sync/Seed Error:", error);
 }
 
 // 4. API ROUTES
 app.use('/api/user', userRouter);
-app.use('/api/seller', sellerRouter);
-app.use('/api/contact', contactRouter);
-app.use('/api/partenaire', partenaireRouter);
-app.use('/api/hours', hourRouter);
-app.use('/api/auth', mailRouter);
+app.use('/api/auth', authRouter);
+
 
 app.get('/', (req, res) => res.send("API IS WORKING NOW"));
 
