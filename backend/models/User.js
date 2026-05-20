@@ -1,56 +1,63 @@
-import { DataTypes } from 'sequelize';
-import { sequelize } from '../configs/db.js';
+import { DataTypes } from "sequelize";
+import { sequelize } from "../configs/db.js";
 
-const User = sequelize.define('User', {
+const User = sequelize.define(
+  "User",
+  {
     name: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        validate: {
-            len: [3, 50],
-            is: /^[A-Za-z\s]+$/i
-        }
+      type: DataTypes.STRING(100),
+      allowNull: false,
+      validate: {
+        len: [3, 50],
+      },
     },
 
     email: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        unique: true,
-        validate: {
-            isEmail: true,
-            is: /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-        },
+      type: DataTypes.STRING(100),
+      unique: true,
+      allowNull: true,
+      validate: {
+        isEmail: true,
+      },
     },
 
-    password: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        validate: {
-            is: /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/
-        }
+    phone: {
+      type: DataTypes.STRING(20),
+      unique: true,
+      allowNull: true,
+    },
+
+    password_hash: {
+      type: DataTypes.STRING,
+      allowNull: false,
     },
 
     role: {
-        type: DataTypes.ENUM('USER', 'ADMIN'),
-        defaultValue: 'USER',
+      type: DataTypes.ENUM("CASHIER", "ADMIN", "MANAGER"),
+      defaultValue: "CASHIER",
     },
 
-    cartItems: {
-        type: DataTypes.JSON,
-        defaultValue: {},
+    is_active: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
     },
 
-    resetCode: {
-        type: DataTypes.STRING,
-        allowNull: true,
+    otp_code: {
+      type: DataTypes.STRING(10),
+      allowNull: true,
     },
 
-    resetCodeExpire: {
-        type: DataTypes.DATE,
-        allowNull: true,
-    }
-
-}, {
+    otp_expire: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+  },
+  {
     timestamps: true,
-});
+    tableName: "users",
+    createdAt: "created_at",
+    updatedAt: "updated_at",
+  }
+);
 
 export default User;
