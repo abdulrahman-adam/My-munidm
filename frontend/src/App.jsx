@@ -5,28 +5,18 @@ import { useAppContext } from "./context/AppContext";
 
 // Components
 import Navbar from "./components/navbar/Navbar";
-import Footer from "./components/footer/Footer";
+
 import Loading from "./components/loading/Loading";
 import Login from "./components/login/Login";
 import AdminLogin from "./components/admin/AdminLogin";
 import AdminLayout from "./pages/admin/AdminLayout";
 
 // Pages
-import Home from "./pages/home/Home";
-import Contact from "./pages/contact/Contact";
-import ContactList from "./pages/admin/ContactList";
+
 import { Toaster } from "react-hot-toast";
-import PrivacyPolicy from "./pages/privacyPolicy/PrivacyPolicy";
-import About from "./pages/about/About";
-import Terms from "./pages/terms/Terms";
-import FAQ from "./pages/faq/FAQ";
-import Shipping from "./pages/Shipping/Shipping";
-import Promotions from "./pages/promotions/Promotions";
+
 import AdminHours from "./pages/admin/AdminHours";
-import Partenaire from "./pages/partenaire/Partenaire";
-import PartenaireList from "./pages/admin/PartenaireList";
-import Services from "./pages/services/Services";
-import CookieConsent from "./components/consent/CookieConsent ";
+
 import ForgotPassword from "./pages/forgotPassword/ForgotPassword";
 
 
@@ -99,21 +89,11 @@ const App = () => {
   />
 </div>
 
-        <CookieConsent />
+        
 
       <Routes>
         {/* ================= PUBLIC ROUTES ================= */}
-        <Route path="/" element={<Home />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/partenaire" element={<Partenaire />} />
-        
-        <Route path="/privacy-policy" element={<PrivacyPolicy/>} />
-        <Route path="/about" element={<About />} />
-        <Route path="/terms" element={<Terms />} />
-        <Route path="/faq" element={<FAQ />} />
-        <Route path="/services" element={<Services />} />
-        <Route path="/shipping" element={<Shipping />} />
-        <Route path="/sales" element={<Promotions />} />
+      
         <Route
     path="/forgot-password"
     element={<ForgotPassword />}
