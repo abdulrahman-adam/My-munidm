@@ -1,296 +1,541 @@
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
-
-
-
-import { useContext, useEffect, useState, createContext } from "react";
 import { useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
 import axios from "axios";
+import toast from "react-hot-toast";
 
-axios.defaults.withCredentials = true;
+/* =========================================================
+   AXIOS CONFIG
+========================================================= */
+
 axios.defaults.baseURL = import.meta.env.VITE_BACKEND_URL;
+axios.defaults.withCredentials = true;
+
+/* =========================================================
+   CONTEXT
+========================================================= */
 
 export const AppContext = createContext();
 
+/* =========================================================
+   PROVIDER
+========================================================= */
+
 export const AppContextProvider = ({ children }) => {
-  const currency = import.meta.env.VITE_CURRENCY;
   const navigate = useNavigate();
 
-  // --- State ---
-  // const [user, setUser] = useState(null); 
-  // To this:
-  const [user, setUser] = useState(undefined);
-  const [adminData, setAdminData] = useState(null); 
-  const [isSeller, setIsSeller] = useState(null);
+  const currency = import.meta.env.VITE_CURRENCY || "€";
 
+  /* =========================================================
+     AUTH STATES
+  ========================================================= */
 
-  const [showUserLogin, setShowUserLogin] = useState(false);
-  const [contacts, setContacts] = useState([]);
-  
-  const [searchQuery, setSearchQuery] = useState("");
+  const [user, setUser] = useState(null);
 
-  const [partenaires, setPartenaires] = useState([]);
+  const [token, setToken] = useState(
+    localStorage.getItem("token") || ""
+  );
 
-  // --- Opening Hours State ---
-  const [shopStatus, setShopStatus] = useState({ 
-    status: "CHARGEMENT...", 
-    schedule: [], 
-    today: null,
-    message: ""
-  });
+  const [loading, setLoading] = useState(true);
 
-  // --- AUTH & PROFILES ---
-  const fetchSeller = async () => {
-    try {
-      const { data } = await axios.get("/api/seller/is-auth");
-      setIsSeller(data.success);
-    } catch {
-      setIsSeller(false);
+  /* =========================================================
+     POS STATES
+  ========================================================= */
+
+  const [cart, setCart] = useState(
+    JSON.parse(localStorage.getItem("cart")) || []
+  );
+
+  const [offlineSales, setOfflineSales] = useState(
+    JSON.parse(localStorage.getItem("offlineSales")) || []
+  );
+
+  /* =========================================================
+     AUTO AUTH HEADER
+  ========================================================= */
+
+  // Replace your existing interceptor with this:
+axios.interceptors.request.use(
+  (config) => {
+    const currentToken = localStorage.getItem("token"); // Always fetch fresh from storage
+    if (currentToken) {
+      config.headers.Authorization = `Bearer ${currentToken}`;
     }
-  };
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
-  const fetchSellerProfile = async () => {
-    try {
-      const { data } = await axios.get("/api/seller/profile");
-      if (data.success) setAdminData(data.seller);
-    } catch (error) {
-      console.error("Seller profile error");
-    }
-  };
+  /* =========================================================
+     AUTO LOGIN ON REFRESH
+  ========================================================= */
 
-const fetchUser = async () => {
-    try {
-      const { data } = await axios.get("/api/user/is-auth");
-      if (data.success) {
-        setUser(data.user);
-        
-        // --- Your Cart Logic ---
-        let rawCart = data.user.cartItems;
-        if (typeof rawCart === "string") {
-          try {
-            while (typeof rawCart === "string") { rawCart = JSON.parse(rawCart); }
-            setCartItems(rawCart || {});
-          } catch { setCartItems({}); }
-        } else {
-          setCartItems(rawCart || {});
-        }
-      } else {
-        // If server responds but success is false
-        setUser(null); 
-      }
-    } catch (error) {
-      // If unauthorized (401) or network error
-      setUser(null); 
+  useEffect(() => {
+
+    const loadUser = async () => {
+  try {
+    if (!token) {
+      setLoading(false);
+      return;
     }
+
+    // 1. COMMENT THIS OUT until you build the route on the backend
+    // const res = await axios.get("/api/auth/me");
+    // setUser(res.data.user);
+
+    // 2. ADD A LOG TO CONFIRM IT'S SKIPPING
+    console.log("Skipping auto-load for now...");
+    
+  } catch (error) {
+    console.log("Load user error:", error);
+    // 3. REMOVE THESE LINES for now so you don't get auto-logged out
+    // localStorage.removeItem("token");
+    // setToken("");
+    // setUser(null);
+  } finally {
+    setLoading(false);
+  }
 };
 
-  // --- LIFECYCLE ---
-  useEffect(() => {
-    const init = async () => {
-      await fetchUser();
-      await fetchSeller();
-    
-    };
-    init();
-  }, []);
+    loadUser();
+
+  }, [token]);
+
+  /* =========================================================
+     SAVE CART
+  ========================================================= */
 
   useEffect(() => {
-    if (isSeller) {
-      fetchSellerProfile();
-      
-    } 
-  }, [isSeller, user]);
 
-  
-  const getAllContacts = async () => {
-    if (!isSeller) return;
-    try {
-      const { data } = await axios.get(`/api/contact/all`);
-      if (data.success) setContacts(data.data || []);
-    } catch (error) {
-      console.error("Contacts error:", error.message);
-    }
-  };
+    localStorage.setItem(
+      "cart",
+      JSON.stringify(cart)
+    );
 
-    const deleteContact = async (id) => {
-    try {
-      const { data } = await axios.delete(`/api/contact/delete/${id}`);
-      if (data.success) {
-        toast.success(data.message);
-        getAllContacts();
-      }
-    } catch (error) {
-      toast.error(error.message);
-    }
-  };
+  }, [cart]);
 
+  /* =========================================================
+     SAVE OFFLINE SALES
+  ========================================================= */
 
-  // --- PARTENAIRE LOGIC ---
-
-  // Function for companies to apply to be a partner
-  const createPartenaire = async (formData) => {
-    try {
-      // formData should contain: companyName, siret, profession, contactEmail, description
-      const { data } = await axios.post(`/api/partenaire/apply`, formData);
-      
-      if (data.success) {
-        toast.success(data.message);
-        return true; // Return true so the form component can clear its inputs
-      } else {
-        toast.error(data.message);
-        return false;
-      }
-    } catch (error) {
-      console.error("Application error:", error.message);
-      toast.error(error.response?.data?.message || "Failed to submit application");
-      return false;
-    }
-  };
-
-  const getAllPartenaires = async () => {
-    if (!isSeller) return;
-    try {
-      const { data } = await axios.get(`/api/partenaire/all`);
-      if (data.success) setPartenaires(data.data || []);
-    } catch (error) {
-      console.error("Partners error:", error.message);
-    }
-  };
-
-
-  const updatePartenaireStatus = async (id, newStatus) => {
-    try {
-      const { data } = await axios.put(`/api/partenaire/update-status/${id}`, { status: newStatus });
-      if (data.success) {
-        toast.success(data.message);
-        getAllPartenaires();
-      }
-    } catch (error) {
-      toast.error(error.message);
-    }
-  };
-
-
-  const deletePartenaire = async (id) => {
-    try {
-      const { data } = await axios.delete(`/api/partenaire/delete/${id}`);
-      if (data.success) {
-        toast.success(data.message);
-        getAllPartenaires();
-      }
-    } catch (error) {
-      toast.error(error.message);
-    }
-  };
-
-
-  // Automatically fetch data when the seller is authenticated
   useEffect(() => {
-    if (isSeller) {
-      getAllContacts();
-      getAllPartenaires();
-    }
-  }, [isSeller]);
 
-// 2. Add this Helper Function inside AppContextProvider
-const calculateStatusLocally = (schedule) => {
-    // Force "Europe/Paris" time calculation
-    const now = new Date();
-    const parisTimeStr = now.toLocaleString("en-GB", { timeZone: "Europe/Paris" }); 
-    // Format: "DD/MM/YYYY, HH:mm:ss"
-    
-    const [datePart, timePart] = parisTimeStr.split(', ');
-    const [hours, minutes] = timePart.split(':').map(Number);
-    const currentTimeMinutes = hours * 60 + minutes;
+    localStorage.setItem(
+      "offlineSales",
+      JSON.stringify(offlineSales)
+    );
 
-    // Get the current day in French to match your database (Lundi, Mardi...)
-    const dayName = new Intl.DateTimeFormat('fr-FR', { weekday: 'long', timeZone: 'Europe/Paris' }).format(now);
-    const currentDay = dayName.charAt(0).toUpperCase() + dayName.slice(1);
+  }, [offlineSales]);
 
-    const todayData = schedule.find(s => s.day_of_week === currentDay);
+  /* =========================================================
+     AUTH FUNCTIONS
+  ========================================================= */
 
-    if (!todayData || todayData.is_closed) {
-        return { status: "FERMÉ", today: todayData, message: "Aujourd'hui est un jour de fermeture" };
-    }
+  // REGISTER
+const register = async (data) => {
+  const token = localStorage.getItem("token");
 
-    const [openH, openM] = todayData.open_time.split(':').map(Number);
-    const [closeH, closeM] = todayData.close_time.split(':').map(Number);
-    
-    const openTimeMinutes = openH * 60 + openM;
-    const closeTimeMinutes = closeH * 60 + closeM;
+  // This check prevents sending "Bearer null"
+  if (!token || token === "null" || token === undefined) {
+    toast.error("You are not logged in! Please log in as Admin first.");
+    return;
+  }
 
-    // Logic for Status
-    if (currentTimeMinutes >= openTimeMinutes && currentTimeMinutes < closeTimeMinutes) {
-        // Check if closing in less than 30 minutes
-        if (closeTimeMinutes - currentTimeMinutes <= 30) {
-            return { status: "FERMETURE PROCHE", today: todayData, message: `Ferme à ${todayData.close_time.slice(0,5)}` };
-        }
-        return { status: "OUVERT", today: todayData, message: "" };
-    } else if (currentTimeMinutes < openTimeMinutes) {
-        return { status: "FERMÉ", today: todayData, message: `Ouvre à ${todayData.open_time.slice(0,5).replace(':', 'h')}` };
+  try {
+    await axios.post("/api/users", data, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    toast.success("User created successfully!");
+    navigate("/users");
+  } catch (error) {
+    toast.error(error.response?.data?.message || "Register failed");
+  }
+};
+
+  // LOGIN
+const login = async (data) => {
+  try {
+    const res = await axios.post("/api/auth/login", data);
+    const { token, user } = res.data;
+
+    // 1. Set state
+    setToken(token);
+    localStorage.setItem("token", token);
+    setUser(user);
+
+    // 2. Redirect based on role
+    // Using trim().toUpperCase() ensures we match your "ADMIN" string perfectly
+    if (user.role && user.role.trim().toUpperCase() === "ADMIN") {
+      navigate("/admin");
     } else {
-        return { status: "FERMÉ", today: todayData, message: "Fermé pour aujourd'hui" };
+      navigate("/");
     }
+  } catch (error) {
+    toast.error(error.response?.data?.message || "Login failed");
+  }
 };
 
-// 3. Update the fetchShopStatus function
-const fetchShopStatus = async () => {
-    try {
-        const { data } = await axios.get("/api/hours/status");
-        if (data.schedule) {
-            // Recalculate status based on Paris Timezone, not Server Timezone
-            const localStatus = calculateStatusLocally(data.schedule);
-            setShopStatus({
-                ...localStatus,
-                schedule: data.schedule
-            });
-        }
-    } catch (error) {
-        console.error("Error fetching shop status:", error);
-    }
-};
+  // LOGOUT
+  const logout = () => {
 
-  // --- Update Opening Hours (Admin Only) ---
-  const updateShopHours = async (day, updatedData) => {
+    setUser(null);
+
+    setToken("");
+
+    localStorage.removeItem("token");
+
+    toast.success("Logged out");
+
+    navigate("/login");
+  };
+
+  /* =========================================================
+     OTP AUTH
+  ========================================================= */
+
+  const sendOtp = async (email) => {
+
     try {
-      const { data } = await axios.put(`/api/hours/update/${day}`, updatedData);
-      if (data.success || data.message) {
-        toast.success(`Horaires de ${day} mis à jour !`);
-        fetchShopStatus(); // Refresh data
-        return true;
-      }
+
+      const res = await axios.post(
+        "/api/auth/send-otp",
+        { email }
+      );
+
+      toast.success(res.data.message);
+
     } catch (error) {
-      toast.error("Erreur lors de la mise à jour");
-      return false;
+
+      toast.error(
+        error.response?.data?.message ||
+        "OTP failed"
+      );
     }
   };
 
-  // --- Add to Lifecycle ---
+  const verifyOtp = async (data) => {
+
+    try {
+
+      const res = await axios.post(
+        "/api/auth/verify-otp",
+        data
+      );
+
+      const authToken = res.data.token;
+
+      setToken(authToken);
+
+      localStorage.setItem(
+        "token",
+        authToken
+      );
+
+      setUser(res.data.user);
+
+      toast.success(res.data.message);
+
+      navigate("/");
+
+    } catch (error) {
+
+      toast.error(
+        error.response?.data?.message ||
+        "Invalid OTP"
+      );
+    }
+  };
+
+  /* =========================================================
+     FORGOT PASSWORD
+  ========================================================= */
+
+  const forgotPassword = async (email) => {
+
+    try {
+
+      const res = await axios.post(
+        "/api/auth/forgot-password",
+        { email }
+      );
+
+      toast.success(res.data.message);
+
+    } catch (error) {
+
+      toast.error(
+        error.response?.data?.message ||
+        "Failed"
+      );
+    }
+  };
+
+  const verifyResetOtp = async (data) => {
+
+    try {
+
+      const res = await axios.post(
+        "/api/auth/verify-reset-otp",
+        data
+      );
+
+      toast.success(res.data.message);
+
+    } catch (error) {
+
+      toast.error(
+        error.response?.data?.message ||
+        "Invalid OTP"
+      );
+    }
+  };
+
+  const resetPassword = async (data) => {
+
+    try {
+
+      const res = await axios.post(
+        "/api/auth/reset-password",
+        data
+      );
+
+      toast.success(res.data.message);
+
+      navigate("/login");
+
+    } catch (error) {
+
+      toast.error(
+        error.response?.data?.message ||
+        "Reset failed"
+      );
+    }
+  };
+
+  /* =========================================================
+     ROLE PROTECTION
+  ========================================================= */
+
+const hasRole = (...roles) => {
+  if (!user || !user.role) return false;
+  // This cleans the role and checks if it exists in the provided list
+  return roles.some(role => role.trim().toUpperCase() === user.role.trim().toUpperCase());
+};
+
+  const isAdmin = hasRole("ADMIN");
+
+  const isManager = hasRole("MANAGER");
+
+  const isCashier = hasRole("CASHIER");
+
+  /* =========================================================
+     POS CART SYSTEM
+  ========================================================= */
+
+  const addToCart = (product) => {
+
+    const existingItem = cart.find(
+      (item) => item.id === product.id
+    );
+
+    if (existingItem) {
+
+      const updatedCart = cart.map((item) =>
+        item.id === product.id
+          ? {
+              ...item,
+              quantity: item.quantity + 1,
+            }
+          : item
+      );
+
+      setCart(updatedCart);
+
+    } else {
+
+      setCart([
+        ...cart,
+        {
+          ...product,
+          quantity: 1,
+        },
+      ]);
+    }
+
+    toast.success("Product added");
+  };
+
+  const removeFromCart = (productId) => {
+
+    const updatedCart = cart
+      .map((item) => {
+
+        if (item.id === productId) {
+
+          return {
+            ...item,
+            quantity: item.quantity - 1,
+          };
+        }
+
+        return item;
+      })
+      .filter((item) => item.quantity > 0);
+
+    setCart(updatedCart);
+  };
+
+  const clearCart = () => {
+    setCart([]);
+  };
+
+  const cartTotal = useMemo(() => {
+
+    return cart.reduce(
+      (total, item) =>
+        total + item.price * item.quantity,
+      0
+    );
+
+  }, [cart]);
+
+  /* =========================================================
+     OFFLINE POS SALES
+  ========================================================= */
+
+  const saveOfflineSale = (saleData) => {
+
+    setOfflineSales((prev) => [
+      ...prev,
+      {
+        ...saleData,
+        offline: true,
+        createdAt: new Date(),
+      },
+    ]);
+
+    toast.success("Sale saved offline");
+  };
+
+  const syncOfflineSales = async () => {
+
+    if (!navigator.onLine) {
+      return;
+    }
+
+    try {
+
+      for (const sale of offlineSales) {
+
+        await axios.post(
+          "/api/sales",
+          sale
+        );
+      }
+
+      setOfflineSales([]);
+
+      localStorage.removeItem("offlineSales");
+
+      toast.success(
+        "Offline sales synchronized"
+      );
+
+    } catch (error) {
+
+      console.log(error);
+
+      toast.error(
+        "Offline sync failed"
+      );
+    }
+  };
+
+  /* =========================================================
+     AUTO SYNC WHEN INTERNET RETURNS
+  ========================================================= */
+
   useEffect(() => {
-    fetchShopStatus();
-    // Optional: Refresh status every 5 minutes to keep "Closing Soon" accurate
-    const interval = setInterval(fetchShopStatus, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, []);
 
+    window.addEventListener(
+      "online",
+      syncOfflineSales
+    );
 
+    return () => {
+
+      window.removeEventListener(
+        "online",
+        syncOfflineSales
+      );
+    };
+
+  }, [offlineSales]);
+
+  /* =========================================================
+     CONTEXT VALUE
+  ========================================================= */
 
   const value = {
-    currency, navigate, user, setUser, isSeller, setIsSeller, adminData, setAdminData,contacts, getAllContacts,
-  deleteContact,
-    showUserLogin, setShowUserLogin, fetchUser,
-     axios, searchQuery, setSearchQuery, shopStatus, 
-    fetchShopStatus, 
-    updateShopHours,
-    partenaires,
-    createPartenaire,
-    setPartenaires,
-    getAllPartenaires,
-    updatePartenaireStatus,
-    deletePartenaire,
+    currency,
+    navigate,
+
+    // states
+    user,
+    token,
+    loading,
+
+    // roles
+    isAdmin,
+    isManager,
+    isCashier,
+    hasRole,
+
+    // auth
+    register,
+    login,
+    logout,
+
+    sendOtp,
+    verifyOtp,
+
+    forgotPassword,
+    verifyResetOtp,
+    resetPassword,
+
+    // POS
+    cart,
+    setCart,
+
+    addToCart,
+    removeFromCart,
+    clearCart,
+
+    cartTotal,
+
+    // offline POS
+    offlineSales,
+    saveOfflineSale,
+    syncOfflineSales,
   };
 
-  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+  return (
+    <AppContext.Provider value={value}>
+      {children}
+    </AppContext.Provider>
+  );
 };
 
-export const useAppContext = () => useContext(AppContext);
+/* =========================================================
+   CUSTOM HOOK
+========================================================= */
+
+export const useAppContext = () => {
+  return useContext(AppContext);
+};

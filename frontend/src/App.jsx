@@ -1,138 +1,89 @@
-import React, { useEffect } from "react";
-import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 
+// Context
 import { useAppContext } from "./context/AppContext";
 
 // Components
 import Navbar from "./components/navbar/Navbar";
-
-import Loading from "./components/loading/Loading";
-import Login from "./components/login/Login";
-import AdminLogin from "./components/admin/AdminLogin";
-import AdminLayout from "./pages/admin/AdminLayout";
+import ProtectedRoute from "./components/protectedRoute/ProtectedRoute";
 
 // Pages
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import Dashboard from "./pages/dashboard/Dashboard";
+import POS from "./pages/pos/POS";
+import AdminPanel from "./pages/adminPanel/AdminPanel";
 
-import { Toaster } from "react-hot-toast";
+const Layout = ({ children }) => (
+  <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-800">
+    <Navbar />
+    <main className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+      {children}
+    </main>
+  </div>
+);
 
-import AdminHours from "./pages/admin/AdminHours";
+export default function App() {
+  const { loading } = useAppContext();
 
-import ForgotPassword from "./pages/forgotPassword/ForgotPassword";
-
-
-const App = () => {
-  const { pathname } = useLocation();
-  const isSellerPath = pathname.includes("admin");
-  const { showUserLogin, setShowUserLogin, isSeller, user } = useAppContext();
-
-  useEffect(() => {
-    setShowUserLogin(false);
-  }, [pathname, setShowUserLogin]);
-
-  // 1. Wait for Auth check to complete
-  // This prevents the <Navigate to="/" /> from running before the server answers
-  if (user === undefined) {
-    return <Loading />;
+  if (loading) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
   }
 
-  // 2. Existing Seller check
-  if (isSellerPath && isSeller === null) return <Loading />;
-
-
-  
   return (
-    // <div className="text-default min-h-screen text-gray-700 bg-white">
-    <div className="min-h-screen transition-colors duration-500 bg-white dark:bg-[#020617] text-gray-700 dark:text-gray-200">
-      {!isSellerPath && <Navbar />}
-      
-      {showUserLogin && <Login />}
-
-   {/* Standard Toaster with Z-Index Fix */}
-<div style={{ zIndex: 99999, position: 'relative' }}>
-  <Toaster 
-    position="top-center"
-    reverseOrder={false}
-    gutter={8}
-    containerStyle={{
-      top: 40, // Adds a little extra space from the very top
-    }}
-    toastOptions={{
-      duration: 3000,
-      style: {
-        borderRadius: '12px',
-        padding: '16px',
-        fontSize: '14px',
-        fontWeight: '600',
-        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-      },
-      success: {
-        style: {
-          background: '#10b981',
-          color: '#fff',
-        },
-        iconTheme: {
-          primary: '#fff',
-          secondary: '#10b981',
-        },
-      },
-      error: {
-        style: {
-          background: '#ef4444',
-          color: '#fff',
-        },
-        iconTheme: {
-          primary: '#fff',
-          secondary: '#ef4444',
-        },
-      },
-    }}
-  />
-</div>
-
-        
-
+    <>
+      <Toaster position="top-right" reverseOrder={false} />
       <Routes>
-        {/* ================= PUBLIC ROUTES ================= */}
-      
+        {/* Public Routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+
+        {/* Protected Routes (Authenticated) */}
         <Route
-    path="/forgot-password"
-    element={<ForgotPassword />}
-/>
-        {/* Redirection si la page n'existe pas */}
-        <Route path="*" element={<h1 className="text-center py-20">404 - Page non trouvée</h1>} />
-       
-        
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <Dashboard />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
 
-      
-        <Route path="/loader" element={<Loading />} />
+        {/* POS System (Cashier, Manager, Admin) */}
+        <Route
+          path="/pos"
+          element={
+            <ProtectedRoute allowedRoles={["CASHIER", "MANAGER", "ADMIN"]}>
+              <Layout>
+                <POS />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
 
-
-        {/* ================= ADMIN ROUTES ================= */}
+        {/* Admin Panel (Admin Only) */}
         <Route
           path="/admin"
-          element={isSeller ? <AdminLayout /> : <AdminLogin />}
-        >
-  
-          <Route path="all-contact" element={<ContactList />} />
-          <Route path="all-partenaire" element={<PartenaireList />} />
-          <Route path="hours" element={<AdminHours />} />
-        </Route>
+          element={
+            <ProtectedRoute allowedRoles={["ADMIN"]}>
+              <Layout>
+                <AdminPanel />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
 
-        {/* FALLBACK */}
-        <Route path="*" element={<Navigate to="/" />} />
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-
-      {!isSellerPath && <Footer />}
-    </div>
+    </>
   );
-};
-
-export default App;
-
-// Breadcrumb Navigation
-// Recursive || Recursive Filter
-// getAllDescendantIds
-
-// splat (wildcard)
-// fix a mistake" (Soft Reset)
-// git reset --soft HEAD~1
+}

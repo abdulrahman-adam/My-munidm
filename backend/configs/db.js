@@ -9,9 +9,11 @@ const sequelize = new Sequelize(
     process.env.DB_NAME, 
     process.env.DB_USER, 
     process.env.DB_PASSWORD, 
+    
     {
         host: process.env.DB_HOST,
         dialect: 'mysql',
+        logging: console.log, // This will print every SQL query to your terminal
         logging: false, 
         dialectOptions: {
             connectTimeout: 60000,

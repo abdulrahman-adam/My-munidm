@@ -8,7 +8,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node main.js",
     "server": "nodemon main.js",
-    "app": "node main.js"
+    "app": "node main.js",
+    "seed:admin": "node seeders/seedAdmin.js"
   },
   "author": "abdulrahman",
   "license": "ISC",
