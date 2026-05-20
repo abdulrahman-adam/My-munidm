@@ -64,12 +64,12 @@ services:
 
 
   # ========================
-  # FRONTEND CLIENT
+  # FRONTEND frontend
   # ========================
-  munidm_client:
-    build: ./client
-    image: abdulrahman939291/client
-    container_name: munidm_client
+  munidm_frontend:
+    build: ./frontend
+    image: abdulrahman939291/frontend
+    container_name: munidm_frontend
     restart: always
 
     ports:
