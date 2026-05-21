@@ -21,12 +21,9 @@ export default function Login() {
         <div className="text-center">
           <Calculator className="mx-auto h-12 w-12 text-blue-600" />
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900">Sign in to your account</h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Or{" "}
-            <Link to="/register" className="font-medium text-blue-600 hover:text-blue-500">
-              create a new account
-            </Link>
-          </p>
+<p className="mt-2 inline-block px-3 py-1 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full animate-pulse shadow-lg">
+  Fancymarket
+</p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">

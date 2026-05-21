@@ -15,6 +15,7 @@ import ForgotPassword from "./pages/auth/ForgotPassword";
 import Dashboard from "./pages/dashboard/Dashboard";
 import POS from "./pages/pos/POS";
 import AdminPanel from "./pages/adminPanel/AdminPanel";
+import Home from "./pages/home/Home";
 
 const Layout = ({ children }) => (
   <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-800">
@@ -38,11 +39,11 @@ export default function App() {
 
   return (
     <>
-      <Toaster position="top-right" reverseOrder={false} />
+      <Toaster position="top-center" reverseOrder={false} />
       <Routes>
         {/* Public Routes */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/" element={<Home />} />
+        
         <Route path="/forgot-password" element={<ForgotPassword />} />
 
         {/* Protected Routes (Authenticated) */}
