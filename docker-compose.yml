@@ -1,116 +1,87 @@
-version: "3.9"
-
 services:
-
   # ========================
-  # MYSQL DATABASE
+  # DATABASE (MySQL)
   # ========================
-  munidm_db:
+  db:
     image: mysql:8.0
     container_name: munidm_db
     restart: always
-
+    # Optimized for compatibility with Node/PHP drivers
     command: --default-authentication-plugin=mysql_native_password
-
-    environment:
-      MYSQL_ROOT_PASSWORD: Munidm91!!!
-      MYSQL_DATABASE: munidm_db
-      MYSQL_USER: munidm
-      MYSQL_PASSWORD: Munidm91!!!
-
-    ports:
-      - "3307:3306"
-
-    volumes:
-      - munidm_mysql_data:/var/lib/mysql
-
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
-    networks:
-      - shared-network
-
-
-  # ========================
-  # BACKEND API
-  # ========================
-  munidm_backend:
-    build: ./backend
-    image: abdulrahman939291/backend
-    container_name: munidm_backend
-    restart: always
-
     env_file:
       - ./backend/.env
-
     environment:
-      MYSQL_HOST: munidm_db
-      MYSQL_USER: munidm
-      MYSQL_PASSWORD: Munidm91!!!
-      MYSQL_DATABASE: munidm_db
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "3307:3306"
+    volumes:
+      - munidm_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - munidm-network
 
+  # ========================
+  # BACKEND (Node.js)
+  # ========================
+  backend:
+    build: ./backend
+    container_name: munidm_backend
+    restart: always
+    env_file:
+      - ./backend/.env
+    environment:
+      - MYSQL_HOST=db  # Internal Docker DNS name
+      - PORT=5000
     ports:
       - "3005:3000"
-
     depends_on:
-      munidm_db:
+      db:
         condition: service_healthy
-
     networks:
-      - shared-network
-
+      - munidm-network
 
   # ========================
-  # FRONTEND frontend
+  # FRONTEND (React/Vite + Nginx)
   # ========================
-  munidm_frontend:
+  frontend:
     build: ./frontend
-    image: abdulrahman939291/frontend
     container_name: munidm_frontend
     restart: always
-
     ports:
       - "8080:80"
-
-    environment:
-      VITE_BACKEND_URL: https://api.munidm.fr
-
-    depends_on:
-      - munidm_backend
-
     networks:
-      - shared-network
-
+      - munidm-network
 
   # ========================
   # PHPMYADMIN
   # ========================
-  munidm_phpmyadmin:
+  phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: munidm_phpmyadmin
     restart: always
-
     ports:
       - "8089:80"
-
     environment:
-      PMA_HOST: munidm_db
-      MYSQL_ROOT_PASSWORD: Munidm91!!!
-
+      - PMA_HOST=db
+      - PMA_PORT=3306
+      - PMA_ARBITRARY=1
     depends_on:
-      - munidm_db
-
+      db:
+        condition: service_healthy
     networks:
-      - shared-network
-
+      - munidm-network
 
 volumes:
   munidm_mysql_data:
 
-
 networks:
-  shared-network:
-    external: true
+  munidm-network:
+    driver: bridge
