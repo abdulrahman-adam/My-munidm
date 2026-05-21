@@ -13,7 +13,7 @@ import authRouter from "./routes/authRoute.js";
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 4000;
+const port = process.env.PORT || 5000;
 
 /* -------------------- DATABASE CONNECTION -------------------- */
 try {
@@ -97,3 +97,7 @@ app.use((err, req, res, next) => {
 app.listen(port, () => {
   console.log(`🚀 Server running on http://localhost:${port}`);
 });
+
+
+// RUB the SEED
+// docker exec -it munidm_backend npm run seed:admin
