@@ -42,21 +42,15 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-xl border border-gray-100">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="max-w-md w-full space-y-8 bg-white p-4 rounded-xl shadow-xl border border-gray-100">
         
         {/* Header */}
         <div className="text-center">
-          <Calculator className="mx-auto h-12 w-12 text-blue-600" />
+    
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
             Create an account
           </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Already have an account?{" "}
-            <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500 transition-colors">
-              Sign in here
-            </Link>
-          </p>
         </div>
 
         {/* Register Form */}
