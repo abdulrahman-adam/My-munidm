@@ -16,66 +16,97 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8 bg-white p-4 rounded-xl shadow-xl border border-gray-100">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8">
+
+      <div className="w-full max-w-md bg-white rounded-xl shadow-xl border border-gray-100 p-6 sm:p-8 lg:p-10 space-y-8">
+
+        {/* HEADER */}
         <div className="text-center">
           <Calculator className="mx-auto h-12 w-12 text-blue-600" />
-          <h2 className="mt-6 text-2xl font-extrabold text-gray-900">Sign in to your account</h2>
-<p className="mt-2 inline-block px-3 py-1 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full animate-pulse shadow-lg">
-  Fancymarket
-</p>
+
+          <h2 className="mt-6 text-2xl font-extrabold text-gray-900">
+            Sign in to your account
+          </h2>
+
+          <p className="mt-2 inline-block px-4 py-1 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full animate-pulse shadow-lg">
+            Fancymarket
+          </p>
         </div>
+
+        {/* FORM */}
         <form className="mt-4 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
+
+          <div className="space-y-5">
+
+            {/* EMAIL */}
             <div>
-              <label className="block text-sm font-medium text-gray-700">Email address</label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
-                </div>
+              <label className="block text-sm font-medium text-gray-700">
+                Email address
+              </label>
+
+              <div className="mt-2 relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+
                 <input
                   type="email"
                   required
-                  className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-3 border"
                   placeholder="admin@smartpos.com"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
+                  className="w-full pl-10 pr-4 py-3 rounded-md border border-gray-300 text-sm
+                  focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 />
               </div>
             </div>
+
+            {/* PASSWORD */}
             <div>
-              <label className="block text-sm font-medium text-gray-700">Password</label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
-                </div>
+              <label className="block text-sm font-medium text-gray-700">
+                Password
+              </label>
+
+              <div className="mt-2 relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+
                 <input
                   type="password"
                   required
-                  className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-3 border"
                   placeholder="••••••••"
                   value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, password: e.target.value })
+                  }
+                  className="w-full pl-10 pr-4 py-3 rounded-md border border-gray-300 text-sm
+                  focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 />
               </div>
             </div>
+
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="text-sm">
-              <Link to="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
-                Forgot your password?
-              </Link>
-            </div>
+          {/* FORGOT PASSWORD */}
+          <div className="flex justify-end">
+            <Link
+              to="/forgot-password"
+              className="text-sm text-blue-600 hover:text-blue-500 transition"
+            >
+              Forgot your password?
+            </Link>
           </div>
 
+          {/* BUTTON */}
           <button
             type="submit"
             disabled={isSubmitting}
-            className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:bg-blue-400"
+            className="w-full py-3 px-4 rounded-md text-white font-medium
+            bg-blue-600 hover:bg-blue-700 transition
+            disabled:bg-blue-400"
           >
             {isSubmitting ? "Signing in..." : "Sign In"}
           </button>
+
         </form>
       </div>
     </div>
