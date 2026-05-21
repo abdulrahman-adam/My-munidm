@@ -78,28 +78,62 @@ export default function AdminPanel() {
         </div>
       </div>
 
-      {/* REGISTER MODAL */}
-      {showRegister && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl w-full max-w-md relative shadow-2xl animate-[fadeIn_0.3s_ease-out]">
+     {/* REGISTER MODAL */}
+{showRegister && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm py-6">
 
-            {/* CLOSE BUTTON */}
-            <button
-              onClick={() => setShowRegister(false)}
-              className="absolute top-3 right-3 text-gray-500 hover:text-black text-lg"
-            >
-              ✕
-            </button>
+    {/* MODAL CARD */}
+    <div
+      className="
+        relative
+        w-full
+        max-w-lg
+        bg-white
+        shadow-2xl
+        border border-gray-100
+        overflow-hidden
+        animate-[fadeIn_0.25s_ease-out]
+      "
+    >
 
-            {/* TITLE */}
-            <h2 className="text-xl font-bold mb-4 text-gray-800">
-              Create New User
-            </h2>
+      {/* HEADER */}
+      <div className="flex items-center justify-between border-b border-gray-100 px-6 py-5">
+        
+        <div>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+            Create New User
+          </h2>
 
-            <Register />
-          </div>
+          <p className="text-sm text-gray-500 mt-1">
+            Create cashier, manager, or admin account
+          </p>
         </div>
-      )}
+
+        {/* CLOSE BUTTON */}
+        <button
+          onClick={() => setShowRegister(false)}
+          className="
+            flex items-center justify-center
+            w-10 h-10
+            rounded-full
+            bg-gray-100
+            hover:bg-red-100
+            text-gray-500
+            hover:text-red-600
+            transition-all duration-200
+          "
+        >
+          ✕
+        </button>
+      </div>
+
+      {/* BODY */}
+      <div className="max-h-[85vh] overflow-y-auto">
+        <Register />
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }

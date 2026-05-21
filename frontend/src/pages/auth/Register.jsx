@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useAppContext } from "../../context/AppContext";
-import { Mail, Lock, User, Phone } from "lucide-react";
+import { Mail, Lock, User, Phone, Eye, EyeOff, Shield } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function Register() {
-  const { register } = useAppContext();
+  const { register, isAdmin } = useAppContext();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -12,9 +12,14 @@ export default function Register() {
     phone: "",
     password: "",
     confirmPassword: "",
+    role: "CASHIER", // DEFAULT ROLE
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // SHOW / HIDE PASSWORD STATES
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -40,19 +45,19 @@ export default function Register() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8">
 
       {/* CARD */}
-      <div className="w-full max-w-md bg-white rounded-xl shadow-xl border border-gray-100 p-6 sm:p-8 lg:p-10 space-y-8">
+      <div className="w-full max-w-md bg-white shadow-xl border border-gray-100 p-4 sm:p-6 lg:p-8 space-y-6">
 
         {/* HEADER */}
         <div className="text-center">
-          <h2 className="mt-2 text-2xl sm:text-3xl font-extrabold text-gray-900">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900">
             Create an account
           </h2>
         </div>
 
         {/* FORM */}
-        <form className="space-y-6" onSubmit={handleSubmit}>
+        <form className="space-y-4" onSubmit={handleSubmit}>
 
-          <div className="space-y-5">
+          <div className="space-y-3">
 
             {/* NAME */}
             <div>
@@ -62,7 +67,6 @@ export default function Register() {
 
               <div className="mt-2 relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-
                 <input
                   type="text"
                   name="name"
@@ -84,7 +88,6 @@ export default function Register() {
 
               <div className="mt-2 relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-
                 <input
                   type="email"
                   name="email"
@@ -106,7 +109,6 @@ export default function Register() {
 
               <div className="mt-2 relative">
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-
                 <input
                   type="tel"
                   name="phone"
@@ -119,6 +121,28 @@ export default function Register() {
               </div>
             </div>
 
+            {/* ROLE (ONLY ADMIN CAN SEE) */}
+            {isAdmin && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <Shield className="h-4 w-4" />
+                  Role
+                </label>
+
+                <select
+                  name="role"
+                  value={formData.role}
+                  onChange={handleChange}
+                  className="w-full mt-2 px-4 py-3 rounded-md border border-gray-300 text-sm
+                  focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                >
+                  <option value="CASHIER">CASHIER</option>
+                  <option value="MANAGER">MANAGER</option>
+                  <option value="ADMIN">ADMIN</option>
+                </select>
+              </div>
+            )}
+
             {/* PASSWORD */}
             <div>
               <label className="block text-sm font-medium text-gray-700">
@@ -127,18 +151,28 @@ export default function Register() {
 
               <div className="mt-2 relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   name="password"
                   required
                   minLength="6"
                   placeholder="••••••••"
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-3 rounded-md border border-gray-300 text-sm
+                  className="w-full pl-10 pr-12 py-3 rounded-md border border-gray-300 text-sm
                   focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
               </div>
             </div>
 
@@ -150,18 +184,30 @@ export default function Register() {
 
               <div className="mt-2 relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-
                 <input
-                  type="password"
+                  type={showConfirmPassword ? "text" : "password"}
                   name="confirmPassword"
                   required
                   minLength="6"
                   placeholder="••••••••"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-3 rounded-md border border-gray-300 text-sm
+                  className="w-full pl-10 pr-12 py-3 rounded-md border border-gray-300 text-sm
                   focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 />
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowConfirmPassword(!showConfirmPassword)
+                  }
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
               </div>
             </div>
 
