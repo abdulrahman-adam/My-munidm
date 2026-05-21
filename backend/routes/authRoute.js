@@ -1,11 +1,15 @@
 import express from "express";
 
-import { forgotPassword, login, resetPassword, sendOtp, verifyOtp, verifyResetOtp } from "../controllers/authController.js";
+import { forgotPassword, login, me, resetPassword, sendOtp, verifyOtp, verifyResetOtp } from "../controllers/authController.js";
+import { protect } from "../middleware/authMiddleware.js";
 
 
 const authRouter = express.Router();
 
 authRouter.post("/login", login);
+
+/* GET CURRENT USER */
+authRouter.get("/me", protect, me);
 
 // optional OTP system
 authRouter.post("/send-otp", sendOtp);

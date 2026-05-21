@@ -11,6 +11,7 @@ import {
 import { protect } from "../middleware/authMiddleware.js";
 import { authorizeRoles } from "../middleware/roleMiddleware.js";
 
+
 const userRouter = express.Router();
 
 // ✅ Create user
@@ -28,6 +29,8 @@ userRouter.get(
   authorizeRoles("ADMIN"),
   getUsers
 );
+
+
 
 // ✅ Get single user
 userRouter.get(

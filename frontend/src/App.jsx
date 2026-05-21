@@ -17,15 +17,26 @@ import POS from "./pages/pos/POS";
 import AdminPanel from "./pages/adminPanel/AdminPanel";
 import Home from "./pages/home/Home";
 
-const Layout = ({ children }) => (
-  <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-800">
-    <Navbar />
-    <main className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-      {children}
-    </main>
-  </div>
-);
+// IMPORTANT: Outlet fix
+import { Outlet } from "react-router-dom";
 
+/* =========================
+   LAYOUT (FIXED)
+========================= */
+const Layout = () => {
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-800">
+      <Navbar />
+      <main className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        <Outlet />
+      </main>
+    </div>
+  );
+};
+
+/* =========================
+   APP
+========================= */
 export default function App() {
   const { loading } = useAppContext();
 
@@ -40,50 +51,60 @@ export default function App() {
   return (
     <>
       <Toaster position="top-center" reverseOrder={false} />
+
       <Routes>
-        {/* Public Routes */}
+
+        {/* =========================
+            PUBLIC ROUTES
+        ========================= */}
         <Route path="/" element={<Home />} />
-        
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
 
-        {/* Protected Routes (Authenticated) */}
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <Layout>
+        {/* =========================
+            PROTECTED LAYOUT GROUP
+        ========================= */}
+        <Route element={<Layout />}>
+
+
+          {/* DASHBOARD (ADMIN ONLY OR AUTH USER) */}
+          <Route
+            path="/admin-dashboard"
+            element={
+              <ProtectedRoute allowedRoles={["ADMIN", "MANAGER"]}>
                 <Dashboard />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
+              </ProtectedRoute>
+            }
+          />
 
-        {/* POS System (Cashier, Manager, Admin) */}
-        <Route
-          path="/pos"
-          element={
-            <ProtectedRoute allowedRoles={["CASHIER", "MANAGER", "ADMIN"]}>
-              <Layout>
+          {/* POS SYSTEM */}
+          <Route
+            path="/pos"
+            element={
+              <ProtectedRoute allowedRoles={["CASHIER", "MANAGER", "ADMIN"]}>
                 <POS />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
+              </ProtectedRoute>
+            }
+          />
 
-        {/* Admin Panel (Admin Only) */}
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute allowedRoles={["ADMIN"]}>
-              <Layout>
+          {/* ADMIN PANEL */}
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute allowedRoles={["ADMIN"]}>
                 <AdminPanel />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
+              </ProtectedRoute>
+            }
+          />
 
-        {/* Fallback */}
+        </Route>
+
+        {/* =========================
+            FALLBACK ROUTE
+        ========================= */}
         <Route path="*" element={<Navigate to="/" replace />} />
+
       </Routes>
     </>
   );

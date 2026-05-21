@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Plus, Minus, Trash2, CreditCard, Search, WifiOff } from "lucide-react";
+import { 
+  Plus, Minus, Trash2, CreditCard, Search, WifiOff, ShoppingCart 
+} from "lucide-react";
 import toast from "react-hot-toast";
 import { useAppContext } from "../../context/AppContext";
 

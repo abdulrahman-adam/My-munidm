@@ -72,40 +72,41 @@ axios.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-  /* =========================================================
-     AUTO LOGIN ON REFRESH
-  ========================================================= */
+ /* =========================================================
+   AUTO LOGIN ON REFRESH
+========================================================= */
 
-  useEffect(() => {
+useEffect(() => {
+  const loadUser = async () => {
+    try {
+      const storedToken = localStorage.getItem("token");
 
-    const loadUser = async () => {
-  try {
-    if (!token) {
+      if (!storedToken) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
+      const res = await axios.get("/api/auth/me", {
+        headers: {
+          Authorization: `Bearer ${storedToken}`,
+        },
+      });
+
+      setUser(res.data.user);
+    } catch (error) {
+      console.log("Auth load failed:", error);
+
+      // invalid or expired token → clean logout
+      localStorage.removeItem("token");
+      setUser(null);
+    } finally {
       setLoading(false);
-      return;
     }
+  };
 
-    // 1. COMMENT THIS OUT until you build the route on the backend
-    // const res = await axios.get("/api/auth/me");
-    // setUser(res.data.user);
-
-    // 2. ADD A LOG TO CONFIRM IT'S SKIPPING
-    console.log("Skipping auto-load for now...");
-    
-  } catch (error) {
-    console.log("Load user error:", error);
-    // 3. REMOVE THESE LINES for now so you don't get auto-logged out
-    // localStorage.removeItem("token");
-    // setToken("");
-    // setUser(null);
-  } finally {
-    setLoading(false);
-  }
-};
-
-    loadUser();
-
-  }, [token]);
+  loadUser();
+}, []);
 
   /* =========================================================
      SAVE CART
@@ -192,7 +193,7 @@ const login = async (data) => {
 
     toast.success("Logged out");
 
-    navigate("/login");
+    navigate("/");
   };
 
   /* =========================================================

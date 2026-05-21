@@ -125,6 +125,15 @@ export const login = async (req, res) => {
   }
 };
 
+/* =========================
+   GET CURRENT USER (/me)
+   👉 THIS FIXES YOUR REFRESH PROBLEM
+========================= */
+export const me = async (req, res) => {
+  res.json({
+    user: req.user,
+  });
+};
 
 
 export const sendOtp = async (req, res) => {

@@ -22,7 +22,7 @@ export default function Navbar() {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-6">
-            <Link to="/" className="text-gray-600 hover:text-blue-600 flex items-center gap-1 font-medium">
+            <Link to="/admin-dashboard" className="text-gray-600 hover:text-blue-600 flex items-center gap-1 font-medium">
               <LayoutDashboard className="h-4 w-4" /> Dashboard
             </Link>
             
