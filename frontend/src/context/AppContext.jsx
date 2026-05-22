@@ -153,7 +153,7 @@ const register = async (data) => {
       headers: { Authorization: `Bearer ${token}` }
     });
     toast.success("User created successfully!");
-    navigate("/users");
+    navigate("/admin");
   } catch (error) {
     toast.error(error.response?.data?.message || "Register failed");
   }
@@ -318,6 +318,80 @@ const login = async (data) => {
       );
     }
   };
+
+
+  /* =========================================================
+     USERS CRUD
+  ========================================================= */
+
+  const getUsers = async () => {
+    try {
+      const res = await axios.get("/api/users");
+
+      return res.data.users;
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to fetch users"
+      );
+
+      return [];
+    }
+  };
+
+  const getUserById = async (id) => {
+    try {
+      const res = await axios.get(
+        `/api/users/${id}`
+      );
+
+      return res.data.user;
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to fetch user"
+      );
+    }
+  };
+
+  const updateUser = async (id, data) => {
+    try {
+      const res = await axios.put(
+        `/api/users/${id}`,
+        data
+      );
+
+      toast.success(
+        res.data.message || "User updated"
+      );
+
+      return res.data.user;
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message ||
+          "Update failed"
+      );
+    }
+  };
+
+  const deleteUser = async (id) => {
+    try {
+      const res = await axios.delete(
+        `/api/users/${id}`
+      );
+
+      toast.success(
+        res.data.message ||
+          "User deactivated"
+      );
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message ||
+          "Delete failed"
+      );
+    }
+  };
+
 
   /* =========================================================
      ROLE PROTECTION
@@ -510,6 +584,11 @@ const hasRole = (...roles) => {
     verifyResetOtp,
     resetPassword,
 
+   // CRUD USERS
+    getUsers,
+    getUserById,
+    updateUser,
+    deleteUser,
     // POS
     cart,
     setCart,
