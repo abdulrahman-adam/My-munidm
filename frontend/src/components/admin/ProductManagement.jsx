@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useAppContext } from "../../context/AppContext";
 import { Plus, Trash2, Edit, X, Package } from "lucide-react";
 import toast from "react-hot-toast";
+import BarcodeScanner from "../barcodeScanner/BarcodeScanner";
 
 const initialForm = {
   category_id: "",
@@ -30,6 +31,9 @@ export default function ProductManagement() {
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [form, setForm] = useState(initialForm);
+
+  // Barcode State
+  const [showScanner, setShowScanner] = useState(false);
 
   /* =========================
      LOAD DATA
@@ -171,13 +175,21 @@ export default function ProductManagement() {
           Products
         </h2>
 
-        <button
+        {/* <button
           onClick={openCreate}
           className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg"
         >
           <Plus className="h-4 w-4" />
           Add Product
-        </button>
+        </button> */}
+
+        <button
+  onClick={() => setShowScanner(true)}
+  className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg"
+>
+  <Plus className="h-4 w-4" />
+  Scan Product
+</button>
       </div>
 
       {/* PRODUCTS GRID */}
@@ -238,86 +250,31 @@ export default function ProductManagement() {
       </div>
 
       {/* MODAL */}
+           {/* MODAL */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-3 z-50">
-
           <div className="bg-white w-full max-w-xl rounded-xl p-5 relative">
-
-            <button
-              onClick={closeModal}
-              className="absolute top-3 right-3"
-            >
-              <X />
-            </button>
-
-            <h2 className="text-xl font-bold mb-4">
-              {editingProduct ? "Edit Product" : "Create Product"}
-            </h2>
-
-            <form onSubmit={handleSubmit} className="space-y-3">
-
-              <select
-                name="category_id"
-                value={form.category_id}
-                onChange={handleChange}
-                className="w-full border p-2 rounded"
-              >
-                <option value="">Select Category</option>
-                {(categories || []).map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-
-              <input
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-                placeholder="Product name"
-                className="w-full border p-2 rounded"
-              />
-
-              <input
-                name="barcode"
-                value={form.barcode}
-                onChange={handleChange}
-                placeholder="Barcode"
-                className="w-full border p-2 rounded"
-              />
-
-              <div className="grid grid-cols-2 gap-2">
-                <input
-                  name="price"
-                  value={form.price}
-                  onChange={handleChange}
-                  placeholder="Price"
-                  className="border p-2 rounded"
-                />
-
-                <input
-                  name="stock"
-                  value={form.stock}
-                  onChange={handleChange}
-                  placeholder="Stock"
-                  className="border p-2 rounded"
-                />
-              </div>
-
-              <input
-                type="file"
-                multiple
-                accept="image/*"
-                onChange={handleImages}
-              />
-
-              <button className="w-full bg-indigo-600 text-white py-2 rounded">
-                {editingProduct ? "Update" : "Create"}
-              </button>
-
-            </form>
+            ...
           </div>
         </div>
+      )}
+
+      {/* ✅ PUT SCANNER HERE (OUTSIDE MODAL) */}
+      {showScanner && (
+        <BarcodeScanner
+          onClose={() => setShowScanner(false)}
+          onScan={(barcode) => {
+            setForm((prev) => ({
+              ...prev,
+              barcode,
+            }));
+
+            setShowScanner(false);
+            setShowModal(true);
+
+            toast.success("Barcode scanned successfully");
+          }}
+        />
       )}
 
     </div>
