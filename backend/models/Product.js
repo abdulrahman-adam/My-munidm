@@ -18,44 +18,50 @@ const Product = sequelize.define(
         model: "categories",
         key: "id",
       },
+      onDelete: "CASCADE",
     },
 
     name: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(150),
       allowNull: false,
+      validate: {
+        notEmpty: true,
+      },
     },
 
     barcode: {
       type: DataTypes.STRING,
       unique: true,
+      allowNull: true,
     },
 
     price: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
+      validate: {
+        min: 0,
+      },
     },
 
     cost_price: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: true,
+      validate: {
+        min: 0,
+      },
     },
 
     stock: {
       type: DataTypes.INTEGER,
       defaultValue: 0,
+      validate: {
+        min: 0,
+      },
     },
 
-    // 🔥 product images (max 4)
     images: {
       type: DataTypes.JSON,
       defaultValue: [],
-      validate: {
-        maxFourImages(value) {
-          if (value.length > 4) {
-            throw new Error("Maximum 4 images allowed");
-          }
-        },
-      },
     },
 
     description: {
@@ -71,7 +77,22 @@ const Product = sequelize.define(
   {
     tableName: "products",
     timestamps: true,
+    underscored: true,
   }
 );
+
+/* =========================
+   ASSOCIATIONS (IMPORTANT)
+========================= */
+
+Category.hasMany(Product, {
+  foreignKey: "category_id",
+  as: "products",
+});
+
+Product.belongsTo(Category, {
+  foreignKey: "category_id",
+  as: "category",
+});
 
 export default Product;

@@ -541,8 +541,143 @@ const hasRole = (...roles) => {
   }, []);
 
   
+  /* =========================
+➕ CREATE PRODUCT (WITH IMAGES)
+========================= */
+const createProduct = async (data) => {
+  try {
+    const formData = new FormData();
 
-  
+    formData.append("category_id", data.category_id);
+    formData.append("name", data.name);
+    formData.append("barcode", data.barcode || "");
+    formData.append("price", data.price);
+    formData.append("cost_price", data.cost_price || "");
+    formData.append("stock", data.stock || 0);
+    formData.append("description", data.description || "");
+
+    // images (max 4)
+    if (data.images && data.images.length > 0) {
+      data.images.forEach((img) => {
+        formData.append("images", img);
+      });
+    }
+
+    const res = await axios.post("/api/products/create", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    toast.success(res.data.message || "Product created");
+
+    return res.data.product;
+  } catch (error) {
+    toast.error(
+      error.response?.data?.message || "Failed to create product"
+    );
+  }
+};
+
+
+/* =========================
+📦 GET PRODUCT BY ID
+========================= */
+const getProductById = async (id) => {
+  try {
+    const res = await axios.get(`/api/products/${id}`);
+
+    return res.data.product;
+  } catch (error) {
+    toast.error(
+      error.response?.data?.message || "Failed to fetch product"
+    );
+  }
+};
+
+
+/* =========================
+📦 GET ALL PRODUCTS
+========================= */
+
+const getProducts = async () => {
+  try {
+    const res = await axios.get("/api/products/all");
+
+    const products = res.data?.products;
+
+    if (!Array.isArray(products)) {
+      console.warn("getProducts: invalid response format", res.data);
+      return [];
+    }
+
+    return products;
+  } catch (error) {
+    console.error("GET_PRODUCTS_ERROR:", error);
+
+    toast.error(
+      error.response?.data?.message || "Failed to fetch products"
+    );
+
+    return [];
+  }
+};
+/* =========================
+✏️ UPDATE PRODUCT
+========================= */
+const updateProduct = async (id, data) => {
+  try {
+    const formData = new FormData();
+
+    if (data.category_id) formData.append("category_id", data.category_id);
+    if (data.name) formData.append("name", data.name);
+    if (data.barcode) formData.append("barcode", data.barcode);
+    if (data.price) formData.append("price", data.price);
+    if (data.cost_price) formData.append("cost_price", data.cost_price);
+    if (data.stock !== undefined) formData.append("stock", data.stock);
+    if (data.description) formData.append("description", data.description);
+
+    if (data.images && data.images.length > 0) {
+      data.images.forEach((img) => {
+        formData.append("images", img);
+      });
+    }
+
+    const res = await axios.put(`/api/products/${id}`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    toast.success(res.data.message || "Product updated");
+
+    return res.data.product;
+  } catch (error) {
+    toast.error(
+      error.response?.data?.message || "Update failed"
+    );
+  }
+};
+
+/* =========================
+🗑️ DELETE PRODUCT (SOFT DELETE)
+========================= */ 
+
+const deleteProduct = async (id) => {
+  try {
+    const res = await axios.delete(`/api/products/${id}`);
+
+    toast.success(res.data.message || "Product deleted");
+
+    return true;
+  } catch (error) {
+    toast.error(
+      error.response?.data?.message || "Delete failed"
+    );
+
+    return false;
+  }
+};
 
 
 
@@ -736,6 +871,13 @@ const hasRole = (...roles) => {
     createCategory,
     updateCategory,
     deleteCategory,
+
+     // PRODUCTS
+      getProducts,
+      getProductById,
+      createProduct,
+      updateProduct,
+      deleteProduct,
     // POS
     cart,
     setCart,

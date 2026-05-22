@@ -7,36 +7,47 @@ import {
   deleteProduct,
 } from "../controllers/productController.js";
 
-import { protect } from "../middlewares/authMiddleware.js";
-import { authorizeRoles } from "../middlewares/roleMiddleware.js";
+import { protect } from "../middleware/authMiddleware.js";
+import { authorizeRoles } from "../middleware/roleMiddleware.js";
+import { upload } from "../configs/multer.js";
 
 const productRouter = express.Router();
 
-// ✅ Create product
+/* =========================================================
+   CREATE PRODUCT (WITH IMAGES)
+========================================================= */
 productRouter.post(
-  "/",
+  "/create",
   protect,
   authorizeRoles("MANAGER", "ADMIN"),
+  upload.array("images", 4), // 🔥 IMPORTANT: handles 1–4 images
   createProduct
 );
 
-// ✅ Get products
+/* =========================================================
+   GET PRODUCTS
+========================================================= */
 productRouter.get(
-  "/",
+  "/all",
   protect,
   authorizeRoles("CASHIER", "MANAGER", "ADMIN"),
   getProducts
 );
 
-// ✅ Update product
+/* =========================================================
+   UPDATE PRODUCT (WITH IMAGES)
+========================================================= */
 productRouter.put(
   "/:id",
   protect,
   authorizeRoles("MANAGER", "ADMIN"),
+  upload.array("images", 4), // 🔥 allow replacing images
   updateProduct
 );
 
-// ✅ Delete product
+/* =========================================================
+   DELETE PRODUCT
+========================================================= */
 productRouter.delete(
   "/:id",
   protect,

@@ -167,17 +167,19 @@ export const deleteCategory = async (req, res) => {
       });
     }
 
-    // soft delete
-    await category.update({ is_active: false });
+    await category.destroy();
 
-    return res.json({
+    return res.status(200).json({
       success: true,
-      message: "Category deleted successfully",
+      message: "Category permanently deleted",
     });
+
   } catch (error) {
+    console.error("DELETE_CATEGORY_ERROR:", error);
+
     return res.status(500).json({
       success: false,
-      message: error.message,
+      message: error.message || "Internal server error",
     });
   }
 };

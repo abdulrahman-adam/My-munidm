@@ -11,6 +11,7 @@ import {
 import Register from "../auth/Register";
 import UserManagement from "../../components/admin/UserManagement";
 import CategoryManagement from "../../components/admin/CategoryManagement"; // ✅ ADD THIS
+import ProductManagement from "../../components/admin/ProductManagement";
 
 export default function AdminPanel() {
   const [showRegister, setShowRegister] = useState(false);
@@ -117,11 +118,8 @@ export default function AdminPanel() {
       )}
 
       {activeSection === "products" && (
-        <div className="bg-white p-6 rounded-xl border shadow-sm">
-          <h2 className="text-xl font-bold mb-4">Product Management</h2>
-          <p className="text-gray-500">📦 Products CRUD will be here</p>
-        </div>
-      )}
+  <ProductManagement />
+)}
 
       {activeSection === "reports" && (
         <div className="bg-white p-6 rounded-xl border shadow-sm">

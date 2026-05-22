@@ -164,9 +164,7 @@ export const updateUser = async (req, res) => {
 
 
 export const deleteUser = async (req, res) => {
-
   try {
-
     const { id } = req.params;
 
     const user = await User.findByPk(id);
@@ -178,21 +176,19 @@ export const deleteUser = async (req, res) => {
       });
     }
 
-    // soft delete
-    await user.update({
-      is_active: false,
-    });
+    await user.destroy();
 
-    return res.json({
+    return res.status(200).json({
       success: true,
-      message: "User deactivated successfully",
+      message: "User permanently deleted",
     });
 
   } catch (error) {
+    console.error("DELETE_USER_ERROR:", error);
 
     return res.status(500).json({
       success: false,
-      message: error.message,
+      message: error.message || "Internal server error",
     });
   }
 };
