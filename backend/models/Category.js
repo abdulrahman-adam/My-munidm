@@ -21,6 +21,12 @@ const Category = sequelize.define(
       allowNull: true,
     },
 
+   images: {
+  type: DataTypes.JSON,
+  allowNull: false,
+  defaultValue: [],
+},
+
     is_active: {
       type: DataTypes.BOOLEAN,
       defaultValue: true,

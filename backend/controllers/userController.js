@@ -58,6 +58,9 @@ export const getUsers = async (req, res) => {
   try {
 
     const users = await User.findAll({
+      where: {
+        is_active: true, // ✅ IMPORTANT FIX
+      },
       attributes: {
         exclude: ["password_hash", "otp_code", "otp_expire"],
       },

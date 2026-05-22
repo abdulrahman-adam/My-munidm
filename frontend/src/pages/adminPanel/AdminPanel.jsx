@@ -10,6 +10,7 @@ import {
 
 import Register from "../auth/Register";
 import UserManagement from "../../components/admin/UserManagement";
+import CategoryManagement from "../../components/admin/CategoryManagement"; // ✅ ADD THIS
 
 export default function AdminPanel() {
   const [showRegister, setShowRegister] = useState(false);
@@ -40,7 +41,7 @@ export default function AdminPanel() {
         </button>
       </div>
 
-      {/* STATS CARDS */}
+      {/* ================= CARDS ================= */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
 
         {[
@@ -107,17 +108,12 @@ export default function AdminPanel() {
         ))}
       </div>
 
-      {/* =========================
-          ACTIVE SECTIONS
-      ========================= */}
+      {/* ================= ACTIVE SECTIONS ================= */}
 
       {activeSection === "users" && <UserManagement />}
 
       {activeSection === "categories" && (
-        <div className="bg-white p-6 rounded-xl border shadow-sm">
-          <h2 className="text-xl font-bold mb-4">Category Management</h2>
-          <p className="text-gray-500">🗂️ Categories CRUD will be here</p>
-        </div>
+        <CategoryManagement />   // ✅ REAL COMPONENT HERE
       )}
 
       {activeSection === "products" && (
@@ -150,9 +146,7 @@ export default function AdminPanel() {
         </div>
       )}
 
-      {/* =========================
-          REGISTER MODAL
-      ========================= */}
+      {/* ================= REGISTER MODAL ================= */}
       {showRegister && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm py-6">
 

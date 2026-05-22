@@ -9,6 +9,7 @@ import connectCloudinary from "./configs/cloudinary.js";
 // Routes
 import userRouter from "./routes/userRoute.js";
 import authRouter from "./routes/authRoute.js";
+import categoryRouter from "./routes/categoryRoute.js";
 
 dotenv.config();
 
@@ -78,6 +79,7 @@ app.use(express.urlencoded({ extended: true, limit: "100mb" }));
 /* -------------------- ROUTES -------------------- */
 app.use("/api/users", userRouter);
 app.use("/api/auth", authRouter);
+app.use("/api/category", categoryRouter);
 
 /* -------------------- HEALTH CHECK -------------------- */
 app.get("/", (req, res) => {

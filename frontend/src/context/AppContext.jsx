@@ -44,6 +44,12 @@ export const AppContextProvider = ({ children }) => {
 
   const [loading, setLoading] = useState(true);
 
+  /* =========================
+     CATEGORY STATE
+  ========================= */
+  const [categories, setCategories] = useState([]);
+  const [catLoading, setCatLoading] = useState(false);
+
   /* =========================================================
      POS STATES
   ========================================================= */
@@ -409,6 +415,139 @@ const hasRole = (...roles) => {
 
   const isCashier = hasRole("CASHIER");
 
+
+ /* =========================================================
+     CREATE CATEGORY (WITH IMAGES)
+  ========================================================= */
+  const createCategory = async (data) => {
+    try {
+      const formData = new FormData();
+
+      formData.append("name", data.name);
+      formData.append("description", data.description || "");
+
+      // multiple images
+      if (data.images && data.images.length > 0) {
+        for (let i = 0; i < data.images.length; i++) {
+          formData.append("images", data.images[i]);
+        }
+      }
+
+      const res = await axios.post("/api/category/create", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      toast.success(res.data.message || "Category created");
+
+      setCategories((prev) => [res.data.category, ...prev]);
+
+      return res.data.category;
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Failed to create category"
+      );
+    }
+  };
+
+
+  /* =========================================================
+     GET ALL CATEGORIES
+  ========================================================= */
+  const getCategories = async () => {
+    try {
+      setCatLoading(true);
+
+      const res = await axios.get("/api/category/all");
+
+      setCategories(res.data.categories);
+
+      return res.data.categories;
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Failed to load categories"
+      );
+      return [];
+    } finally {
+      setCatLoading(false);
+    }
+  };
+
+ 
+
+  /* =========================================================
+     UPDATE CATEGORY
+  ========================================================= */
+  const updateCategory = async (id, data) => {
+    try {
+      const formData = new FormData();
+
+      if (data.name) formData.append("name", data.name);
+      if (data.description) formData.append("description", data.description);
+      if (data.is_active !== undefined)
+        formData.append("is_active", data.is_active);
+
+      if (data.images && data.images.length > 0) {
+        for (let i = 0; i < data.images.length; i++) {
+          formData.append("images", data.images[i]);
+        }
+      }
+
+      const res = await axios.put(`/api/category/${id}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      toast.success(res.data.message || "Category updated");
+
+      setCategories((prev) =>
+        prev.map((cat) => (cat.id === id ? res.data.category : cat))
+      );
+
+      return res.data.category;
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Update failed"
+      );
+    }
+  };
+
+  /* =========================================================
+     DELETE CATEGORY
+  ========================================================= */
+  const deleteCategory = async (id) => {
+    try {
+      const res = await axios.delete(`/api/category/${id}`);
+
+      toast.success(res.data.message || "Category deleted");
+
+      setCategories((prev) =>
+        prev.filter((cat) => cat.id !== id)
+      );
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Delete failed"
+      );
+    }
+  };
+
+  /* =========================================================
+     AUTO LOAD CATEGORIES
+  ========================================================= */
+  useEffect(() => {
+    getCategories();
+  }, []);
+
+  
+
+  
+
+
+
+
+
   /* =========================================================
      POS CART SYSTEM
   ========================================================= */
@@ -589,6 +728,14 @@ const hasRole = (...roles) => {
     getUserById,
     updateUser,
     deleteUser,
+
+    /* categories */
+    categories,
+    catLoading,
+    getCategories,
+    createCategory,
+    updateCategory,
+    deleteCategory,
     // POS
     cart,
     setCart,

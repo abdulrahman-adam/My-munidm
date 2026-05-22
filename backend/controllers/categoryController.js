@@ -1,0 +1,183 @@
+import Category from "../models/Category.js";
+import { v2 as cloudinary } from "cloudinary";
+
+/* =========================================================
+   CREATE CATEGORY
+========================================================= */
+export const createCategory = async (req, res) => {
+  try {
+    const { name, description } = req.body;
+
+    // check duplicate
+    const existing = await Category.findOne({ where: { name } });
+    if (existing) {
+      return res.status(400).json({
+        success: false,
+        message: "Category already exists",
+      });
+    }
+
+    // upload images to cloudinary (if any)
+    let images = [];
+
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        const result = await cloudinary.uploader.upload(file.path, {
+          folder: "categories",
+        });
+
+        images.push({
+          url: result.secure_url,
+          public_id: result.public_id,
+        });
+      }
+    }
+
+    const category = await Category.create({
+      name,
+      description,
+      images,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Category created successfully",
+      category,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/* =========================================================
+   GET ALL CATEGORIES
+========================================================= */
+export const getCategories = async (req, res) => {
+  try {
+    const categories = await Category.findAll({
+      where: { is_active: true },
+      order: [["createdAt", "DESC"]],
+    });
+
+    const formatted = categories.map((cat) => {
+      const rawImages = cat.images;
+
+      let images = [];
+
+      try {
+        if (Array.isArray(rawImages)) {
+          images = rawImages;
+        } else if (typeof rawImages === "string") {
+          images = JSON.parse(rawImages);
+        }
+      } catch (e) {
+        images = [];
+      }
+
+      return {
+        ...cat.toJSON(),
+        images,
+      };
+    });
+
+    return res.json({
+      success: true,
+      count: formatted.length,
+      categories: formatted,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/* =========================================================
+   UPDATE CATEGORY
+========================================================= */
+export const updateCategory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description, is_active } = req.body;
+
+    const category = await Category.findByPk(id);
+
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        message: "Category not found",
+      });
+    }
+
+    // optional new images
+    let images = category.images || [];
+
+    if (req.files && req.files.length > 0) {
+      images = [];
+
+      for (const file of req.files) {
+        const result = await cloudinary.uploader.upload(file.path, {
+          folder: "categories",
+        });
+
+        images.push({
+          url: result.secure_url,
+          public_id: result.public_id,
+        });
+      }
+    }
+
+    await category.update({
+      name: name ?? category.name,
+      description: description ?? category.description,
+      is_active: is_active ?? category.is_active,
+      images,
+    });
+
+    return res.json({
+      success: true,
+      message: "Category updated successfully",
+      category,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/* =========================================================
+   DELETE CATEGORY (SOFT DELETE STYLE)
+========================================================= */
+export const deleteCategory = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const category = await Category.findByPk(id);
+
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        message: "Category not found",
+      });
+    }
+
+    // soft delete
+    await category.update({ is_active: false });
+
+    return res.json({
+      success: true,
+      message: "Category deleted successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
