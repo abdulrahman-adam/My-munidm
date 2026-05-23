@@ -536,9 +536,11 @@ const hasRole = (...roles) => {
   /* =========================================================
      AUTO LOAD CATEGORIES
   ========================================================= */
-  useEffect(() => {
+ useEffect(() => {
+  if (localStorage.getItem("token")) {
     getCategories();
-  }, []);
+  }
+}, []);
 
   
   /* =========================
