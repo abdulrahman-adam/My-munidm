@@ -69,6 +69,16 @@ const Product = sequelize.define(
       allowNull: true,
     },
 
+    expiration_date: {
+  type: DataTypes.DATE,
+  allowNull: true,
+},
+
+expiry_notification_sent: {
+  type: DataTypes.BOOLEAN,
+  defaultValue: false,
+},
+
     is_active: {
       type: DataTypes.BOOLEAN,
       defaultValue: true,

@@ -15,7 +15,12 @@ export const createProduct = async (req, res) => {
       cost_price,
       stock,
       description,
+      expiration_date, // NEW
     } = req.body;
+
+    /* =========================================================
+       VALIDATION
+    ========================================================= */
 
     if (!category_id || !name || !price) {
       return res.status(400).json({
@@ -24,7 +29,12 @@ export const createProduct = async (req, res) => {
       });
     }
 
+    /* =========================================================
+       CHECK CATEGORY
+    ========================================================= */
+
     const category = await Category.findByPk(category_id);
+
     if (!category) {
       return res.status(404).json({
         success: false,
@@ -32,8 +42,14 @@ export const createProduct = async (req, res) => {
       });
     }
 
+    /* =========================================================
+       CHECK BARCODE
+    ========================================================= */
+
     const existing = barcode
-      ? await Product.findOne({ where: { barcode } })
+      ? await Product.findOne({
+          where: { barcode },
+        })
       : null;
 
     if (existing) {
@@ -42,6 +58,10 @@ export const createProduct = async (req, res) => {
         message: "Barcode already exists",
       });
     }
+
+    /* =========================================================
+       HANDLE IMAGES
+    ========================================================= */
 
     let images = [];
 
@@ -54,9 +74,12 @@ export const createProduct = async (req, res) => {
       }
 
       for (const file of req.files) {
-        const result = await cloudinary.uploader.upload(file.path, {
-          folder: "products",
-        });
+        const result = await cloudinary.uploader.upload(
+          file.path,
+          {
+            folder: "products",
+          }
+        );
 
         images.push({
           url: result.secure_url,
@@ -64,6 +87,10 @@ export const createProduct = async (req, res) => {
         });
       }
     }
+
+    /* =========================================================
+       CREATE PRODUCT
+    ========================================================= */
 
     const product = await Product.create({
       category_id,
@@ -73,15 +100,23 @@ export const createProduct = async (req, res) => {
       cost_price,
       stock,
       description,
+      expiration_date, // NEW
       images,
     });
 
+    /* =========================================================
+       RESPONSE
+    ========================================================= */
+
     return res.status(201).json({
       success: true,
+      message: "Product created successfully",
       product,
     });
+
   } catch (error) {
     console.log(error);
+
     return res.status(500).json({
       success: false,
       message: error.message,
@@ -98,19 +133,23 @@ export const getProducts = async (req, res) => {
       where: {
         is_active: true,
       },
+
       include: [
         {
           model: Category,
           as: "category",
         },
       ],
+
       order: [["createdAt", "DESC"]],
     });
 
     return res.status(200).json({
       success: true,
+      count: products.length, // NEW
       products,
     });
+
   } catch (error) {
     console.error("GET_PRODUCTS_ERROR:", error);
 
@@ -128,13 +167,22 @@ export const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
 
+    /* =========================================================
+       FIND PRODUCT
+    ========================================================= */
+
     const product = await Product.findByPk(id);
+
     if (!product) {
       return res.status(404).json({
         success: false,
         message: "Product not found",
       });
     }
+
+    /* =========================================================
+       HANDLE IMAGES
+    ========================================================= */
 
     let images = product.images;
 
@@ -149,9 +197,12 @@ export const updateProduct = async (req, res) => {
       images = [];
 
       for (const file of req.files) {
-        const result = await cloudinary.uploader.upload(file.path, {
-          folder: "products",
-        });
+        const result = await cloudinary.uploader.upload(
+          file.path,
+          {
+            folder: "products",
+          }
+        );
 
         images.push({
           url: result.secure_url,
@@ -160,22 +211,58 @@ export const updateProduct = async (req, res) => {
       }
     }
 
-    await product.update({
-  category_id: req.body.category_id ? Number(req.body.category_id) : product.category_id,
-  name: req.body.name ?? product.name,
-  barcode: req.body.barcode || null,
-  price: req.body.price ? Number(req.body.price) : product.price,
-  cost_price: req.body.cost_price ? Number(req.body.cost_price) : product.cost_price,
-  stock: req.body.stock ? Number(req.body.stock) : product.stock,
-  description: req.body.description ?? product.description,
-  images,
-});
+    /* =========================================================
+       UPDATE PRODUCT
+    ========================================================= */
 
-    return res.json({
+    await product.update({
+      category_id: req.body.category_id
+        ? Number(req.body.category_id)
+        : product.category_id,
+
+      name: req.body.name ?? product.name,
+
+      barcode: req.body.barcode || null,
+
+      price: req.body.price
+        ? Number(req.body.price)
+        : product.price,
+
+      cost_price: req.body.cost_price
+        ? Number(req.body.cost_price)
+        : product.cost_price,
+
+      stock: req.body.stock !== undefined
+        ? Number(req.body.stock)
+        : product.stock,
+
+      description:
+        req.body.description ?? product.description,
+
+      expiration_date: // NEW
+        req.body.expiration_date ??
+        product.expiration_date,
+
+      expiry_notification_sent: // NEW
+        req.body.expiry_notification_sent ??
+        product.expiry_notification_sent,
+
+      images,
+    });
+
+    /* =========================================================
+       RESPONSE
+    ========================================================= */
+
+    return res.status(200).json({
       success: true,
+      message: "Product updated successfully",
       product,
     });
+
   } catch (error) {
+    console.log(error);
+
     return res.status(500).json({
       success: false,
       message: error.message,
@@ -190,6 +277,9 @@ export const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
 
+    /* =========================================================
+       FIND PRODUCT
+    ========================================================= */
     const product = await Product.findByPk(id);
 
     if (!product) {
@@ -199,8 +289,29 @@ export const deleteProduct = async (req, res) => {
       });
     }
 
+    /* =========================================================
+       DELETE CLOUDINARY IMAGES
+    ========================================================= */
+    if (Array.isArray(product.images) && product.images.length > 0) {
+      for (const image of product.images) {
+        if (image.public_id) {
+          try {
+            await cloudinary.uploader.destroy(image.public_id);
+          } catch (err) {
+            console.warn("Cloudinary delete failed:", err.message);
+          }
+        }
+      }
+    }
+
+    /* =========================================================
+       HARD DELETE FROM DATABASE
+    ========================================================= */
     await product.destroy();
 
+    /* =========================================================
+       RESPONSE
+    ========================================================= */
     return res.status(200).json({
       success: true,
       message: "Product permanently deleted",

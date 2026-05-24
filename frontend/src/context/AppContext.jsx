@@ -558,6 +558,11 @@ const createProduct = async (data) => {
     formData.append("stock", data.stock || 0);
     formData.append("description", data.description || "");
 
+    // ✅ NEW FIELD ADDED
+    if (data.expiration_date) {
+      formData.append("expiration_date", data.expiration_date);
+    }
+
     // images (max 4)
     if (data.images && data.images.length > 0) {
       data.images.forEach((img) => {
@@ -589,11 +594,29 @@ const getProductById = async (id) => {
   try {
     const res = await axios.get(`/api/products/${id}`);
 
-    return res.data.product;
+    // ✅ NEW: safety check
+    if (!res?.data?.product) {
+      toast.error("Product not found");
+      return null;
+    }
+
+    const product = res.data.product;
+
+    // ✅ NEW: normalize expiration date (safe for UI usage)
+    return {
+      ...product,
+      expiration_date: product.expiration_date
+        ? new Date(product.expiration_date)
+        : null,
+    };
   } catch (error) {
+    console.error("GET_PRODUCT_BY_ID_ERROR:", error);
+
     toast.error(
       error.response?.data?.message || "Failed to fetch product"
     );
+
+    return null;
   }
 };
 
@@ -613,7 +636,35 @@ const getProducts = async () => {
       return [];
     }
 
-    return products;
+    const now = new Date();
+
+    // ✅ NEW: enrich products with expiration logic
+    const enrichedProducts = products.map((product) => {
+      const expDate = product.expiration_date
+        ? new Date(product.expiration_date)
+        : null;
+
+      let is_expired = false;
+      let is_expiring_soon = false;
+
+      if (expDate) {
+        is_expired = expDate < now;
+
+        const diffDays =
+          (expDate - now) / (1000 * 60 * 60 * 24);
+
+        is_expiring_soon = diffDays <= 7 && diffDays >= 0;
+      }
+
+      return {
+        ...product,
+        expiration_date: expDate,
+        is_expired,
+        is_expiring_soon,
+      };
+    });
+
+    return enrichedProducts;
   } catch (error) {
     console.error("GET_PRODUCTS_ERROR:", error);
 
@@ -639,6 +690,12 @@ const updateProduct = async (id, data) => {
     if (data.stock !== undefined) formData.append("stock", data.stock);
     if (data.description) formData.append("description", data.description);
 
+    // ✅ NEW: expiration date support
+    if (data.expiration_date) {
+      formData.append("expiration_date", data.expiration_date);
+    }
+
+    // images
     if (data.images && data.images.length > 0) {
       data.images.forEach((img) => {
         formData.append("images", img);
@@ -671,13 +728,24 @@ const deleteProduct = async (id) => {
 
     toast.success(res.data.message || "Product deleted");
 
-    return true;
+    // ✅ NEW: optional debug log for admin tracking
+    console.log("PRODUCT_DELETED:", id);
+
+    return {
+      success: true,
+      id,
+    };
   } catch (error) {
+    console.error("DELETE_PRODUCT_ERROR:", error);
+
     toast.error(
       error.response?.data?.message || "Delete failed"
     );
 
-    return false;
+    return {
+      success: false,
+      id,
+    };
   }
 };
 
