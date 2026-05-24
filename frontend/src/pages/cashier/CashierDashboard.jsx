@@ -86,34 +86,118 @@ export default function Cashier() {
   /* =========================
      SCANNER
   ========================= */
-  const startScanner = async () => {
+ /* =========================
+   SCANNER
+========================= */
+const startScanner = async () => {
+  try {
     setScanning(true);
 
     setTimeout(async () => {
       const html5QrCode = new Html5Qrcode("reader");
+
       scannerRef.current = html5QrCode;
 
       await html5QrCode.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: 250 },
-        async (barcode) => {
-          const product = await getProductByBarcode(barcode);
+        {
+          facingMode: "environment",
+        },
+        {
+          fps: 10,
+          qrbox: {
+            width: 280,
+            height: 180,
+          },
+          aspectRatio: 1.7,
+        },
 
-          if (product) addToCart(product);
+        /* SUCCESS SCAN */
+        async (decodedText) => {
+          try {
+            playBeep();
 
-          stopScanner();
+            console.log("BARCODE:", decodedText);
+
+            const product =
+              await getProductByBarcode(decodedText);
+
+            console.log("PRODUCT:", product);
+
+            if (!product) {
+              toast.error("Product not found");
+              speak("Product not found");
+              return;
+            }
+
+            /* STOCK CHECK */
+            if (product.stock <= 0) {
+              toast.error("Out of stock");
+              speak("Out of stock");
+              return;
+            }
+
+            addToCart(product);
+
+            toast.success(`${product.name} added`);
+
+            speak(`${product.name} added`);
+
+            /* PREVENT MULTI SCAN */
+            await html5QrCode.pause(true);
+
+            setTimeout(async () => {
+              try {
+                await html5QrCode.resume();
+              } catch (err) {
+                console.log(err);
+              }
+            }, 1500);
+
+          } catch (error) {
+            console.log(error);
+
+            toast.error("Scan failed");
+
+            speak("Scan failed");
+          }
+        },
+
+        /* SCAN ERROR */
+        (errorMessage) => {
+          // optional
+          // console.log(errorMessage);
         }
       );
     }, 300);
-  };
 
-  const stopScanner = async () => {
+  } catch (error) {
+    console.log(error);
+
+    toast.error("Camera access denied");
+
+    speak("Camera access denied");
+
+    setScanning(false);
+  }
+};
+
+/* =========================
+   STOP SCANNER
+========================= */
+const stopScanner = async () => {
+  try {
     if (scannerRef.current) {
       await scannerRef.current.stop();
       await scannerRef.current.clear();
+
+      scannerRef.current = null;
     }
-    setScanning(false);
-  };
+  } catch (error) {
+    console.log(error);
+  }
+
+  setScanning(false);
+};
 
   /* =========================
      CHECKOUT

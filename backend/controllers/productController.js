@@ -142,18 +142,33 @@ export const createProduct = async (req, res) => {
   GET PRODUCT BY BARCODE
 ========================= */
 export const getByBarcode = async (req, res) => {
-  const product = await Product.findOne({
-    where: { barcode: req.params.barcode },
-  });
+  try {
+    const { barcode } = req.params;
 
-  if (!product) {
-    return res.status(404).json({
+    const product = await Product.findOne({
+      where: { barcode },
+    });
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      product,
+    });
+
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
       success: false,
-      message: "Product not found",
+      message: error.message,
     });
   }
-
-  res.json({ success: true, product });
 };
 
 /* =========================

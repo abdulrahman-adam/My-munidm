@@ -28,6 +28,7 @@ productRouter.post(
 productRouter.get(
   "/barcode/:barcode",
   protect,
+  authorizeRoles("CASHIER", "MANAGER", "ADMIN"),
   getByBarcode
 );
 

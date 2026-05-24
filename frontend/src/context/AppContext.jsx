@@ -618,10 +618,21 @@ const getProductById = async (id) => {
 // GET PRODUCT BY BARCODE
 const getProductByBarcode = async (barcode) => {
   try {
-    const res = await axios.get(`/api/products/barcode/${barcode}`);
-    return res.data.product;
+    const { data } = await axios.get(
+      `/api/products/barcode/${barcode}`
+    );
+
+    return data.product;
+
   } catch (error) {
-    toast.error("Product not found");
+    console.log(error);
+
+    toast.error(
+      error.response?.data?.message ||
+      "Product not found"
+    );
+
+    return null;
   }
 };
 
@@ -980,6 +991,7 @@ const createReturn = async (data) => {
       createProduct,
       updateProduct,
       deleteProduct,
+      getProductByBarcode,
     // POS
     cart,
     setCart,
