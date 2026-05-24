@@ -10,6 +10,7 @@ import {
   Calculator,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { Html5Qrcode } from "html5-qrcode";
 
 const initialForm = {
   category_id: "",
@@ -24,7 +25,7 @@ const initialForm = {
 };
 
 /* =========================
-   REGEX VALIDATION
+   VALIDATION
 ========================= */
 const onlyNumbers = /^[0-9]*$/;
 const decimalRegex = /^[0-9]*\.?[0-9]*$/;
@@ -40,27 +41,24 @@ export default function ProductManagement() {
     categories,
   } = useAppContext();
 
-  const videoRef = useRef(null);
-  const streamRef = useRef(null);
+  const scannerRef = useRef(null);
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+
+  const [showScanner, setShowScanner] = useState(false);
+
   const [form, setForm] = useState(initialForm);
 
   /* =========================
-     CALCULATOR STATES
+     CALCULATOR
   ========================= */
   const [quantity, setQuantity] = useState("");
   const [unitPrice, setUnitPrice] = useState("");
   const [unitCostPrice, setUnitCostPrice] = useState("");
-
-  /* =========================
-     CAMERA
-  ========================= */
-  const [showScanner, setShowScanner] = useState(false);
 
   /* =========================
      LOAD DATA
@@ -72,7 +70,7 @@ export default function ProductManagement() {
       const data = await getProducts();
       setProducts(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error("LOAD_DATA_ERROR:", error);
+      console.error(error);
       setProducts([]);
     } finally {
       setLoading(false);
@@ -85,48 +83,81 @@ export default function ProductManagement() {
   }, []);
 
   /* =========================
-     CAMERA START
+     SPEAK MESSAGE
+  ========================= */
+  const speakMessage = (message) => {
+    if ("speechSynthesis" in window) {
+      const speech = new SpeechSynthesisUtterance(message);
+
+      speech.lang = "en-US";
+      speech.rate = 1;
+      speech.pitch = 1;
+
+      window.speechSynthesis.speak(speech);
+    }
+  };
+
+  /* =========================
+     START SCANNER
   ========================= */
   const startScanner = async () => {
     try {
       setShowScanner(true);
 
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: "environment",
-        },
-      });
+      setTimeout(async () => {
+        const html5QrCode = new Html5Qrcode("reader");
 
-      streamRef.current = stream;
+        scannerRef.current = html5QrCode;
 
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
+        await html5QrCode.start(
+          {
+            facingMode: "environment",
+          },
+          {
+            fps: 10,
+            qrbox: {
+              width: 280,
+              height: 140,
+            },
+          },
+          async (decodedText) => {
+            setForm((prev) => ({
+              ...prev,
+              barcode: decodedText,
+            }));
 
-      // Fake barcode simulation
-      // Replace later with real barcode scanner library if needed
-      setTimeout(() => {
-        const fakeBarcode = Date.now().toString();
+            toast.success("Barcode scanned successfully");
 
-        setForm((prev) => ({
-          ...prev,
-          barcode: fakeBarcode,
-        }));
+            speakMessage("Barcode scanned successfully");
 
-        toast.success("Barcode scanned successfully");
+            await stopScanner();
+          },
+          () => {}
+        );
+      }, 300);
 
-        stopScanner();
-      }, 3000);
     } catch (error) {
       console.error(error);
-      toast.error("Cannot access camera");
+
+      toast.error("Unable to access camera");
+
+      speakMessage("Unable to access camera");
+
       setShowScanner(false);
     }
   };
 
-  const stopScanner = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
+  /* =========================
+     STOP SCANNER
+  ========================= */
+  const stopScanner = async () => {
+    try {
+      if (scannerRef.current) {
+        await scannerRef.current.stop();
+        await scannerRef.current.clear();
+      }
+    } catch (error) {
+      console.log(error);
     }
 
     setShowScanner(false);
@@ -151,24 +182,20 @@ export default function ProductManagement() {
   }, [quantity, unitPrice, unitCostPrice]);
 
   /* =========================
-     FORM HANDLER
+     HANDLE CHANGE
   ========================= */
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    const numericFields = [
-      "barcode",
-      "stock",
-    ];
-
-    const decimalFields = [
-      "price",
-      "cost_price",
-    ];
+    const numericFields = ["barcode", "stock"];
+    const decimalFields = ["price", "cost_price"];
 
     if (numericFields.includes(name)) {
       if (value === "" || onlyNumbers.test(value)) {
-        setForm((prev) => ({ ...prev, [name]: value }));
+        setForm((prev) => ({
+          ...prev,
+          [name]: value,
+        }));
       }
 
       return;
@@ -176,17 +203,23 @@ export default function ProductManagement() {
 
     if (decimalFields.includes(name)) {
       if (value === "" || decimalRegex.test(value)) {
-        setForm((prev) => ({ ...prev, [name]: value }));
+        setForm((prev) => ({
+          ...prev,
+          [name]: value,
+        }));
       }
 
       return;
     }
 
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   /* =========================
-     IMAGE HANDLER
+     HANDLE IMAGES
   ========================= */
   const handleImages = (e) => {
     const files = Array.from(e.target.files || []);
@@ -218,6 +251,7 @@ export default function ProductManagement() {
   ========================= */
   const openCreate = () => {
     setEditingProduct(null);
+
     setForm(initialForm);
 
     setQuantity("");
@@ -245,12 +279,14 @@ export default function ProductManagement() {
     setShowModal(true);
   };
 
-  const closeModal = () => {
-    stopScanner();
+  const closeModal = async () => {
+    await stopScanner();
 
     setShowModal(false);
-    setForm(initialForm);
+
     setEditingProduct(null);
+
+    setForm(initialForm);
 
     setQuantity("");
     setUnitPrice("");
@@ -295,11 +331,22 @@ export default function ProductManagement() {
           : "Product created successfully"
       );
 
-      closeModal();
+      speakMessage(
+        editingProduct
+          ? "Product updated successfully"
+          : "Product created successfully"
+      );
+
+      await closeModal();
+
       loadData();
-    } catch (err) {
-      console.error(err);
+
+    } catch (error) {
+      console.error(error);
+
       toast.error("Something went wrong");
+
+      speakMessage("Something went wrong");
     }
   };
 
@@ -309,11 +356,20 @@ export default function ProductManagement() {
   const handleDelete = async (id) => {
     if (!confirm("Delete this product ?")) return;
 
-    await deleteProduct(id);
+    try {
+      await deleteProduct(id);
 
-    toast.success("Product deleted");
+      toast.success("Product deleted successfully");
 
-    loadData();
+      speakMessage("Product deleted successfully");
+
+      loadData();
+
+    } catch (error) {
+      console.error(error);
+
+      toast.error("Delete failed");
+    }
   };
 
   /* =========================
@@ -336,13 +392,13 @@ export default function ProductManagement() {
      UI
   ========================= */
   return (
-    <div className="space-y-6 p-3 sm:p-5 bg-gradient-to-br from-slate-50 to-indigo-50 min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 p-3 sm:p-5 space-y-6">
 
       {/* HEADER */}
       <div className="flex flex-col lg:flex-row justify-between gap-4 lg:items-center">
 
         <div>
-          <h2 className="text-2xl sm:text-3xl font-black flex items-center gap-3 text-slate-800">
+          <h2 className="flex items-center gap-3 text-2xl sm:text-3xl font-black text-slate-800">
             <div className="bg-indigo-600 text-white p-2 rounded-2xl shadow-lg">
               <Package className="h-6 w-6" />
             </div>
@@ -351,15 +407,16 @@ export default function ProductManagement() {
           </h2>
 
           <p className="text-gray-500 mt-1 text-sm">
-            Manage your inventory professionally
+            Manage your products professionally
           </p>
         </div>
 
         <button
           onClick={openCreate}
-          className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 active:scale-95 transition-all duration-300 text-white px-5 py-3 rounded-2xl shadow-xl font-semibold"
+          className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-2xl shadow-xl transition-all active:scale-95"
         >
           <Plus className="h-5 w-5" />
+
           Add Product
         </button>
       </div>
@@ -369,9 +426,9 @@ export default function ProductManagement() {
 
         {loading ? (
           <div className="col-span-full text-center py-20">
-            <div className="animate-spin rounded-full h-14 w-14 border-4 border-indigo-600 border-t-transparent mx-auto"></div>
+            <div className="animate-spin h-14 w-14 rounded-full border-4 border-indigo-600 border-t-transparent mx-auto"></div>
 
-            <p className="mt-4 text-gray-500 font-medium">
+            <p className="mt-4 text-gray-500">
               Loading products...
             </p>
           </div>
@@ -379,7 +436,7 @@ export default function ProductManagement() {
           products.map((p) => (
             <div
               key={p.id}
-              className="group bg-white rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-100"
+              className="bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-md hover:shadow-2xl transition-all duration-500"
             >
 
               {/* IMAGE */}
@@ -391,11 +448,11 @@ export default function ProductManagement() {
                       key={i}
                       src={img?.url || img}
                       alt={p.name}
-                      className="h-full w-full object-cover group-hover:scale-110 transition duration-700"
+                      className="w-full h-full object-cover hover:scale-110 transition duration-700"
                     />
                   ))
                 ) : (
-                  <div className="flex items-center justify-center w-full h-full text-gray-400">
+                  <div className="w-full h-full flex items-center justify-center text-gray-400">
                     No Images
                   </div>
                 )}
@@ -454,6 +511,7 @@ export default function ProductManagement() {
                     className="flex items-center gap-2 text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-xl transition"
                   >
                     <Edit className="h-4 w-4" />
+
                     Edit
                   </button>
 
@@ -462,6 +520,7 @@ export default function ProductManagement() {
                     className="flex items-center gap-2 text-red-600 hover:bg-red-50 px-4 py-2 rounded-xl transition"
                   >
                     <Trash2 className="h-4 w-4" />
+
                     Delete
                   </button>
 
@@ -477,10 +536,10 @@ export default function ProductManagement() {
       {showModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 z-50">
 
-          <div className="bg-white w-full max-w-5xl rounded-3xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 max-h-[95vh] overflow-y-auto">
+          <div className="bg-white w-full max-w-5xl rounded-3xl overflow-hidden shadow-2xl max-h-[95vh] overflow-y-auto">
 
             {/* HEADER */}
-            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-5 text-white flex items-center justify-between">
+            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-5 text-white flex justify-between items-center">
 
               <div>
                 <h2 className="font-black text-2xl">
@@ -496,7 +555,7 @@ export default function ProductManagement() {
 
               <button
                 onClick={closeModal}
-                className="bg-white/20 hover:bg-white/30 transition p-2 rounded-xl"
+                className="bg-white/20 hover:bg-white/30 p-2 rounded-xl transition"
               >
                 <X />
               </button>
@@ -511,7 +570,7 @@ export default function ProductManagement() {
 
               {/* CATEGORY */}
               <div className="lg:col-span-2">
-                <label className="font-bold text-sm text-gray-700 block mb-2">
+                <label className="font-bold text-sm block mb-2 text-gray-700">
                   Category
                 </label>
 
@@ -519,7 +578,7 @@ export default function ProductManagement() {
                   name="category_id"
                   value={form.category_id}
                   onChange={handleChange}
-                  className="border-2 border-gray-200 focus:border-indigo-500 outline-none rounded-2xl p-3 w-full"
+                  className="w-full border-2 border-gray-200 rounded-2xl p-3 outline-none focus:border-indigo-500"
                 >
                   <option value="">
                     Select Category
@@ -538,7 +597,7 @@ export default function ProductManagement() {
 
               {/* PRODUCT NAME */}
               <div>
-                <label className="font-bold text-sm text-gray-700 block mb-2">
+                <label className="font-bold text-sm block mb-2 text-gray-700">
                   Product Name
                 </label>
 
@@ -547,13 +606,13 @@ export default function ProductManagement() {
                   value={form.name}
                   onChange={handleChange}
                   placeholder="Enter product name"
-                  className="border-2 border-gray-200 focus:border-indigo-500 outline-none rounded-2xl p-3 w-full transition"
+                  className="w-full border-2 border-gray-200 rounded-2xl p-3 outline-none focus:border-indigo-500"
                 />
               </div>
 
               {/* BARCODE */}
               <div>
-                <label className="font-bold text-sm text-gray-700 block mb-2">
+                <label className="font-bold text-sm block mb-2 text-gray-700">
                   Barcode
                 </label>
 
@@ -563,14 +622,14 @@ export default function ProductManagement() {
                     name="barcode"
                     value={form.barcode}
                     onChange={handleChange}
-                    placeholder="Scan or enter barcode"
-                    className="border-2 border-gray-200 focus:border-indigo-500 outline-none rounded-2xl p-3 w-full transition"
+                    placeholder="Scan barcode"
+                    className="w-full border-2 border-gray-200 rounded-2xl p-3 outline-none focus:border-indigo-500"
                   />
 
                   <button
                     type="button"
                     onClick={startScanner}
-                    className="bg-indigo-600 hover:bg-indigo-700 transition text-white px-4 rounded-2xl shadow-lg"
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 rounded-2xl shadow-lg transition"
                   >
                     <Camera className="h-5 w-5" />
                   </button>
@@ -602,7 +661,7 @@ export default function ProductManagement() {
                         setQuantity(e.target.value)
                       }
                       placeholder="Ex: 9"
-                      className="border-2 border-gray-200 rounded-2xl p-3 w-full outline-none focus:border-indigo-500"
+                      className="w-full border-2 border-gray-200 rounded-2xl p-3 outline-none focus:border-indigo-500"
                     />
                   </div>
 
@@ -617,7 +676,7 @@ export default function ProductManagement() {
                         setUnitPrice(e.target.value)
                       }
                       placeholder="Ex: 5"
-                      className="border-2 border-gray-200 rounded-2xl p-3 w-full outline-none focus:border-indigo-500"
+                      className="w-full border-2 border-gray-200 rounded-2xl p-3 outline-none focus:border-indigo-500"
                     />
                   </div>
 
@@ -632,7 +691,7 @@ export default function ProductManagement() {
                         setUnitCostPrice(e.target.value)
                       }
                       placeholder="Ex: 2"
-                      className="border-2 border-gray-200 rounded-2xl p-3 w-full outline-none focus:border-indigo-500"
+                      className="w-full border-2 border-gray-200 rounded-2xl p-3 outline-none focus:border-indigo-500"
                     />
                   </div>
 
@@ -645,7 +704,7 @@ export default function ProductManagement() {
                       Total Stock
                     </p>
 
-                    <h4 className="font-black text-2xl text-indigo-600">
+                    <h4 className="text-2xl font-black text-indigo-600">
                       {form.stock || 0}
                     </h4>
                   </div>
@@ -655,7 +714,7 @@ export default function ProductManagement() {
                       Total Price
                     </p>
 
-                    <h4 className="font-black text-2xl text-green-600">
+                    <h4 className="text-2xl font-black text-green-600">
                       € {form.price || 0}
                     </h4>
                   </div>
@@ -665,7 +724,7 @@ export default function ProductManagement() {
                       Total Cost
                     </p>
 
-                    <h4 className="font-black text-2xl text-orange-600">
+                    <h4 className="text-2xl font-black text-orange-600">
                       € {form.cost_price || 0}
                     </h4>
                   </div>
@@ -676,7 +735,7 @@ export default function ProductManagement() {
 
               {/* PRICE */}
               <div>
-                <label className="font-bold text-sm text-gray-700 block mb-2">
+                <label className="font-bold text-sm block mb-2 text-gray-700">
                   Total Price
                 </label>
 
@@ -685,13 +744,13 @@ export default function ProductManagement() {
                   value={form.price}
                   onChange={handleChange}
                   placeholder="Price"
-                  className="border-2 border-gray-200 focus:border-indigo-500 outline-none rounded-2xl p-3 w-full"
+                  className="w-full border-2 border-gray-200 rounded-2xl p-3 outline-none focus:border-indigo-500"
                 />
               </div>
 
               {/* COST PRICE */}
               <div>
-                <label className="font-bold text-sm text-gray-700 block mb-2">
+                <label className="font-bold text-sm block mb-2 text-gray-700">
                   Total Cost Price
                 </label>
 
@@ -700,13 +759,13 @@ export default function ProductManagement() {
                   value={form.cost_price}
                   onChange={handleChange}
                   placeholder="Cost Price"
-                  className="border-2 border-gray-200 focus:border-indigo-500 outline-none rounded-2xl p-3 w-full"
+                  className="w-full border-2 border-gray-200 rounded-2xl p-3 outline-none focus:border-indigo-500"
                 />
               </div>
 
               {/* STOCK */}
               <div>
-                <label className="font-bold text-sm text-gray-700 block mb-2">
+                <label className="font-bold text-sm block mb-2 text-gray-700">
                   Stock
                 </label>
 
@@ -715,13 +774,13 @@ export default function ProductManagement() {
                   value={form.stock}
                   onChange={handleChange}
                   placeholder="Stock"
-                  className="border-2 border-gray-200 focus:border-indigo-500 outline-none rounded-2xl p-3 w-full"
+                  className="w-full border-2 border-gray-200 rounded-2xl p-3 outline-none focus:border-indigo-500"
                 />
               </div>
 
               {/* EXPIRATION */}
               <div>
-                <label className="font-bold text-sm text-gray-700 block mb-2">
+                <label className="font-bold text-sm block mb-2 text-gray-700">
                   Expiration Date
                 </label>
 
@@ -730,13 +789,13 @@ export default function ProductManagement() {
                   name="expiration_date"
                   value={form.expiration_date}
                   onChange={handleChange}
-                  className="border-2 border-gray-200 focus:border-indigo-500 outline-none rounded-2xl p-3 w-full"
+                  className="w-full border-2 border-gray-200 rounded-2xl p-3 outline-none focus:border-indigo-500"
                 />
               </div>
 
               {/* DESCRIPTION */}
               <div className="lg:col-span-2">
-                <label className="font-bold text-sm text-gray-700 block mb-2">
+                <label className="font-bold text-sm block mb-2 text-gray-700">
                   Description
                 </label>
 
@@ -746,13 +805,13 @@ export default function ProductManagement() {
                   value={form.description}
                   onChange={handleChange}
                   placeholder="Product description"
-                  className="border-2 border-gray-200 focus:border-indigo-500 outline-none rounded-2xl p-3 w-full resize-none"
+                  className="w-full border-2 border-gray-200 rounded-2xl p-3 outline-none resize-none focus:border-indigo-500"
                 />
               </div>
 
               {/* IMAGES */}
               <div className="lg:col-span-2">
-                <label className="font-bold text-sm text-gray-700 block mb-2">
+                <label className="font-bold text-sm block mb-2 text-gray-700">
                   Product Images
                 </label>
 
@@ -760,13 +819,13 @@ export default function ProductManagement() {
                   type="file"
                   multiple
                   onChange={handleImages}
-                  className="border-2 border-dashed border-gray-300 rounded-2xl p-4 w-full"
+                  className="w-full border-2 border-dashed border-gray-300 rounded-2xl p-4"
                 />
               </div>
 
               {/* SUBMIT */}
               <div className="lg:col-span-2">
-                <button className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-90 transition-all active:scale-[0.98] text-white w-full py-4 rounded-2xl font-black text-lg shadow-2xl">
+                <button className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-2xl font-black text-lg shadow-2xl hover:opacity-90 transition">
                   {editingProduct
                     ? "Update Product"
                     : "Create Product"}
@@ -777,7 +836,7 @@ export default function ProductManagement() {
 
           </div>
 
-          {/* CAMERA MODAL */}
+          {/* SCANNER MODAL */}
           {showScanner && (
             <div className="fixed inset-0 bg-black/90 z-[60] flex items-center justify-center p-4">
 
@@ -800,11 +859,9 @@ export default function ProductManagement() {
 
                 <div className="p-4">
 
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    className="w-full rounded-2xl bg-black"
+                  <div
+                    id="reader"
+                    className="w-full overflow-hidden rounded-2xl"
                   />
 
                   <p className="text-center text-sm text-gray-500 mt-4">
@@ -817,6 +874,7 @@ export default function ProductManagement() {
 
             </div>
           )}
+
         </div>
       )}
     </div>
