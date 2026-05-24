@@ -569,11 +569,7 @@ const createProduct = async (data) => {
       });
     }
 
-    const res = await axios.post("/api/products/create", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+    const res = await axios.post("/api/products/create", formData);
 
     toast.success(res.data.message || "Product created");
 

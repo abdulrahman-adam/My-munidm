@@ -221,18 +221,24 @@ export default function ProductManagement() {
   /* =========================
      HANDLE IMAGES
   ========================= */
-  const handleImages = (e) => {
-    const files = Array.from(e.target.files || []);
+ const handleImages = (e) => {
+  const files = e.target.files;
 
-    if (files.length > 4) {
-      return toast.error("Maximum 4 images allowed");
-    }
+  if (!files || files.length === 0) {
+    return toast.error("No images selected");
+  }
 
-    setForm((prev) => ({
-      ...prev,
-      images: files,
-    }));
-  };
+  const fileArray = Array.from(files);
+
+  if (fileArray.length > 4) {
+    return toast.error("Maximum 4 images allowed");
+  }
+
+  setForm((prev) => ({
+    ...prev,
+    images: fileArray,
+  }));
+};
 
   const normalizeImages = (images) => {
     if (!images) return [];
@@ -325,11 +331,11 @@ export default function ProductManagement() {
         await createProduct(payload);
       }
 
-      toast.success(
-        editingProduct
-          ? "Product updated successfully"
-          : "Product created successfully"
-      );
+      // toast.success(
+      //   editingProduct
+      //     ? "Product updated successfully"
+      //     : "Product created successfully"
+      // );
 
       speakMessage(
         editingProduct
