@@ -5,6 +5,7 @@ import {
   getProducts,
   updateProduct,
   deleteProduct,
+  getByBarcode,
 } from "../controllers/productController.js";
 
 import { protect } from "../middleware/authMiddleware.js";
@@ -22,6 +23,12 @@ productRouter.post(
   authorizeRoles("MANAGER", "ADMIN"),
   upload.array("images", 4), // 🔥 IMPORTANT: handles 1–4 images
   createProduct
+);
+
+productRouter.get(
+  "/barcode/:barcode",
+  protect,
+  getByBarcode
 );
 
 /* =========================================================

@@ -139,6 +139,24 @@ export const createProduct = async (req, res) => {
 };
 
 /* =========================
+  GET PRODUCT BY BARCODE
+========================= */
+export const getByBarcode = async (req, res) => {
+  const product = await Product.findOne({
+    where: { barcode: req.params.barcode },
+  });
+
+  if (!product) {
+    return res.status(404).json({
+      success: false,
+      message: "Product not found",
+    });
+  }
+
+  res.json({ success: true, product });
+};
+
+/* =========================
    GET PRODUCTS
 ========================= */
 export const getProducts = async (req, res) => {
@@ -328,7 +346,6 @@ export const deleteProduct = async (req, res) => {
     ========================================================= */
     return res.status(200).json({
       success: true,
-      message: "Product permanently deleted",
     });
 
   } catch (error) {
@@ -340,3 +357,4 @@ export const deleteProduct = async (req, res) => {
     });
   }
 };
+

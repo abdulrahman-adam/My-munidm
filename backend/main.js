@@ -11,6 +11,8 @@ import userRouter from "./routes/userRoute.js";
 import authRouter from "./routes/authRoute.js";
 import categoryRouter from "./routes/categoryRoute.js";
 import productRouter from "./routes/productRoute.js";
+import returnRouter from "./routes/returnRoutes.js";
+import saleRouter from "./routes/saleRoute.js";
 
 dotenv.config();
 
@@ -82,6 +84,8 @@ app.use("/api/users", userRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/category", categoryRouter);
 app.use("/api/products", productRouter);
+app.use("/api/returns", returnRouter);
+app.use("/api/sales", saleRouter);
 
 /* -------------------- HEALTH CHECK -------------------- */
 app.get("/", (req, res) => {

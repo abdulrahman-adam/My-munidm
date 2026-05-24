@@ -615,6 +615,15 @@ const getProductById = async (id) => {
   }
 };
 
+// GET PRODUCT BY BARCODE
+const getProductByBarcode = async (barcode) => {
+  try {
+    const res = await axios.get(`/api/products/barcode/${barcode}`);
+    return res.data.product;
+  } catch (error) {
+    toast.error("Product not found");
+  }
+};
 
 /* =========================
 📦 GET ALL PRODUCTS
@@ -741,6 +750,34 @@ const deleteProduct = async (id) => {
       success: false,
       id,
     };
+  }
+};
+
+
+
+// CREATE SALE (CASHIER CHECKOUT)
+const createSale = async (data) => {
+  try {
+    const res = await axios.post("/api/sales/create", data);
+
+    toast.success(res.data.message || "Sale completed");
+
+    return res.data.sale;
+  } catch (error) {
+    toast.error(error.response?.data?.message || "Sale failed");
+  }
+};
+
+// CREATE RETURN
+const createReturn = async (data) => {
+  try {
+    const res = await axios.post("/api/returns/create", data);
+
+    toast.success(res.data.message || "Return processed");
+
+    return res.data.returnItem;
+  } catch (error) {
+    toast.error(error.response?.data?.message || "Return failed");
   }
 };
 
