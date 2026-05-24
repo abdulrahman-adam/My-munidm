@@ -7,7 +7,7 @@ import Product from "../models/Product.js";
 ========================= */
 export const createProduct = async (req, res) => {
   try {
-    const {
+    let {
       category_id,
       name,
       barcode,
@@ -15,17 +15,30 @@ export const createProduct = async (req, res) => {
       cost_price,
       stock,
       description,
-      expiration_date, // NEW
+      expiration_date,
     } = req.body;
+
+    /* =========================================================
+       SANITIZE INPUTS (IMPORTANT FOR MOBILE)
+    ========================================================= */
+
+    category_id = category_id ? Number(category_id) : null;
+    price = price ? Number(price) : null;
+    cost_price = cost_price ? Number(cost_price) : 0;
+    stock = stock ? Number(stock) : 0;
+
+    name = name?.trim();
+    barcode = barcode?.trim();
+    description = description?.trim();
 
     /* =========================================================
        VALIDATION
     ========================================================= */
 
-    if (!category_id || !name || !price) {
+    if (!category_id || !name || price === null || isNaN(price)) {
       return res.status(400).json({
         success: false,
-        message: "Missing required fields",
+        message: "Missing or invalid required fields",
       });
     }
 
@@ -43,14 +56,16 @@ export const createProduct = async (req, res) => {
     }
 
     /* =========================================================
-       CHECK BARCODE
+       CHECK BARCODE (SAFE)
     ========================================================= */
 
-    const existing = barcode
-      ? await Product.findOne({
-          where: { barcode },
-        })
-      : null;
+    let existing = null;
+
+    if (barcode && barcode.length > 0) {
+      existing = await Product.findOne({
+        where: { barcode },
+      });
+    }
 
     if (existing) {
       return res.status(400).json({
@@ -60,12 +75,12 @@ export const createProduct = async (req, res) => {
     }
 
     /* =========================================================
-       HANDLE IMAGES
+       HANDLE IMAGES (MOBILE SAFE)
     ========================================================= */
 
     let images = [];
 
-    if (req.files?.length) {
+    if (req.files && Array.isArray(req.files) && req.files.length > 0) {
       if (req.files.length > 4) {
         return res.status(400).json({
           success: false,
@@ -74,12 +89,11 @@ export const createProduct = async (req, res) => {
       }
 
       for (const file of req.files) {
-        const result = await cloudinary.uploader.upload(
-          file.path,
-          {
-            folder: "products",
-          }
-        );
+        if (!file?.path) continue;
+
+        const result = await cloudinary.uploader.upload(file.path, {
+          folder: "products",
+        });
 
         images.push({
           url: result.secure_url,
@@ -95,12 +109,12 @@ export const createProduct = async (req, res) => {
     const product = await Product.create({
       category_id,
       name,
-      barcode,
+      barcode: barcode || null,
       price,
       cost_price,
       stock,
       description,
-      expiration_date, // NEW
+      expiration_date: expiration_date || null,
       images,
     });
 
@@ -115,11 +129,11 @@ export const createProduct = async (req, res) => {
     });
 
   } catch (error) {
-    console.log(error);
+    console.error("CREATE PRODUCT ERROR:", error);
 
     return res.status(500).json({
       success: false,
-      message: error.message,
+      message: error.message || "Internal server error",
     });
   }
 };
