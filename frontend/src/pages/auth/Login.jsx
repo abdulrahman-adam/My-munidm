@@ -1,19 +1,31 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAppContext } from "../../context/AppContext";
 import { Mail, Lock, Calculator } from "lucide-react";
 
 export default function Login() {
   const { login } = useAppContext();
-  const [formData, setFormData] = useState({ email: "", password: "" });
+  const navigate = useNavigate();
+
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    await login(formData);
+  e.preventDefault();
+  setIsSubmitting(true);
+
+  try {
+    await login(formData); // navigation already handled in context
+  } catch (error) {
+    console.error(error);
+  } finally {
     setIsSubmitting(false);
-  };
+  }
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8">
@@ -36,54 +48,50 @@ export default function Login() {
         {/* FORM */}
         <form className="mt-4 space-y-6" onSubmit={handleSubmit}>
 
-          <div className="space-y-5">
+          {/* EMAIL */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Email address
+            </label>
 
-            {/* EMAIL */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Email address
-              </label>
+            <div className="mt-2 relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
 
-              <div className="mt-2 relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-
-                <input
-                  type="email"
-                  required
-                  placeholder="admin@smartpos.com"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                  className="w-full pl-10 pr-4 py-3 rounded-md border border-gray-300 text-sm
-                  focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                />
-              </div>
+              <input
+                type="email"
+                required
+                placeholder="admin@smartpos.com"
+                value={formData.email}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
+                className="w-full pl-10 pr-4 py-3 rounded-md border border-gray-300 text-sm
+                focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              />
             </div>
+          </div>
 
-            {/* PASSWORD */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
+          {/* PASSWORD */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Password
+            </label>
 
-              <div className="mt-2 relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <div className="mt-2 relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
 
-                <input
-                  type="password"
-                  required
-                  placeholder="••••••••"
-                  value={formData.password}
-                  onChange={(e) =>
-                    setFormData({ ...formData, password: e.target.value })
-                  }
-                  className="w-full pl-10 pr-4 py-3 rounded-md border border-gray-300 text-sm
-                  focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                />
-              </div>
+              <input
+                type="password"
+                required
+                placeholder="••••••••"
+                value={formData.password}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
+                className="w-full pl-10 pr-4 py-3 rounded-md border border-gray-300 text-sm
+                focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              />
             </div>
-
           </div>
 
           {/* FORGOT PASSWORD */}
@@ -102,7 +110,7 @@ export default function Login() {
             disabled={isSubmitting}
             className="w-full py-3 px-4 rounded-md text-white font-medium
             bg-blue-600 hover:bg-blue-700 transition
-            disabled:bg-blue-400"
+            disabled:bg-blue-400 flex items-center justify-center"
           >
             {isSubmitting ? "Signing in..." : "Sign In"}
           </button>

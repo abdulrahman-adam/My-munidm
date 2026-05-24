@@ -171,36 +171,35 @@ const login = async (data) => {
     const res = await axios.post("/api/auth/login", data);
     const { token, user } = res.data;
 
-    // 1. Set state
     setToken(token);
     localStorage.setItem("token", token);
     setUser(user);
 
-    // 2. Redirect based on role
-    // Using trim().toUpperCase() ensures we match your "ADMIN" string perfectly
-    if (user.role && user.role.trim().toUpperCase() === "ADMIN") {
-      navigate("/admin");
+    const role = user?.role?.trim().toUpperCase();
+
+    if (role === "ADMIN") {
+      navigate("/admin-dashboard");
+    } else if (role === "MANAGER") {
+      navigate("/admin-dashboard");
+    } else if (role === "CASHIER") {
+      navigate("/cashier-dashboard");
     } else {
       navigate("/");
     }
+
+    return user; // optional if needed elsewhere
+
   } catch (error) {
     toast.error(error.response?.data?.message || "Login failed");
   }
 };
-
   // LOGOUT
-  const logout = () => {
-
-    setUser(null);
-
-    setToken("");
-
-    localStorage.removeItem("token");
-
-    toast.success("Logged out");
-
-    navigate("/");
-  };
+const logout = () => {
+  setUser(null);
+  setToken(null);
+  localStorage.removeItem("token");
+  toast.success("Logged out");
+};
 
   /* =========================================================
      OTP AUTH

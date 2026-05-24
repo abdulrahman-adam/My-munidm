@@ -5,7 +5,7 @@ export default function ProtectedRoute({ children, allowedRoles }) {
   const { user, hasRole } = useAppContext();
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
   if (allowedRoles && allowedRoles.length > 0) {

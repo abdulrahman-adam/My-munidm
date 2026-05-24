@@ -19,6 +19,7 @@ import Home from "./pages/home/Home";
 
 // IMPORTANT: Outlet fix
 import { Outlet } from "react-router-dom";
+import CashierDashboard from "./pages/cashier/CashierDashboard";
 
 /* =========================
    LAYOUT (FIXED)
@@ -94,6 +95,17 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={["ADMIN"]}>
                 <AdminPanel />
+              </ProtectedRoute>
+            }
+          />
+
+
+          {/* CASHIER DASHBOARD */}
+          <Route
+            path="/cashier-dashboard"
+            element={
+              <ProtectedRoute allowedRoles={["CASHIER"]}>
+                <CashierDashboard />
               </ProtectedRoute>
             }
           />
