@@ -7,11 +7,13 @@ import toast from "react-hot-toast";
 export default function Cashier() {
   const { getProductByBarcode, createSale } = useAppContext();
 
-  const scannerRef = useRef(null);
 
   const [cart, setCart] = useState([]);
   const [total, setTotal] = useState(0);
   const [scanning, setScanning] = useState(false);
+
+  const scanLock = useRef(false);
+const scannerRef = useRef(null);
 
   /* =========================
      SOUND + VOICE
@@ -89,92 +91,79 @@ export default function Cashier() {
  /* =========================
    SCANNER
 ========================= */
+
+
 const startScanner = async () => {
   try {
     setScanning(true);
 
-    setTimeout(async () => {
-      const html5QrCode = new Html5Qrcode("reader");
+    const html5QrCode = new Html5Qrcode("reader");
+    scannerRef.current = html5QrCode;
 
-      scannerRef.current = html5QrCode;
+    await html5QrCode.start(
+      { facingMode: "environment" },
+      {
+        fps: 10,
+        qrbox: { width: 280, height: 180 },
+        aspectRatio: 1.7,
+      },
 
-      await html5QrCode.start(
-        {
-          facingMode: "environment",
-        },
-        {
-          fps: 10,
-          qrbox: {
-            width: 280,
-            height: 180,
-          },
-          aspectRatio: 1.7,
-        },
+      // =========================
+      // SUCCESS SCAN
+      // =========================
+      async (decodedText) => {
+        const code = decodedText.trim();
 
-        /* SUCCESS SCAN */
-        async (decodedText) => {
-          try {
-            playBeep();
+        // 🔥 BLOCK MULTIPLE SCANS
+        if (scanLock.current) return;
+        scanLock.current = true;
 
-            console.log("BARCODE:", decodedText);
+        try {
+          playBeep();
+          console.log("BARCODE:", code);
 
-            const product =
-              await getProductByBarcode(decodedText);
+          const product = await getProductByBarcode(code);
 
-            console.log("PRODUCT:", product);
+          console.log("PRODUCT:", product);
 
-            if (!product) {
-              toast.error("Product not found");
-              speak("Product not found");
-              return;
-            }
-
-            /* STOCK CHECK */
-            if (product.stock <= 0) {
-              toast.error("Out of stock");
-              speak("Out of stock");
-              return;
-            }
-
-            addToCart(product);
-
-            toast.success(`${product.name} added`);
-
-            speak(`${product.name} added`);
-
-            /* PREVENT MULTI SCAN */
-            await html5QrCode.pause(true);
-
-            setTimeout(async () => {
-              try {
-                await html5QrCode.resume();
-              } catch (err) {
-                console.log(err);
-              }
-            }, 1500);
-
-          } catch (error) {
-            console.log(error);
-
-            toast.error("Scan failed");
-
-            speak("Scan failed");
+          if (!product) {
+            toast.error("Product not found");
+            speak("Product not found");
+            return;
           }
-        },
 
-        /* SCAN ERROR */
-        (errorMessage) => {
-          // optional
-          // console.log(errorMessage);
+          if (product.stock <= 0) {
+            toast.error("Out of stock");
+            speak("Out of stock");
+            return;
+          }
+
+          addToCart(product);
+
+          toast.success(`${product.name} added`);
+          speak(`${product.name} added`);
+
+        } catch (error) {
+          console.log(error);
+          toast.error("Scan failed");
+          speak("Scan failed");
         }
-      );
-    }, 300);
 
+        // 🔥 release scan lock after delay
+        setTimeout(() => {
+          scanLock.current = false;
+        }, 1200);
+      },
+
+      // =========================
+      // SCAN ERROR (ignored safely)
+      // =========================
+      () => {}
+    );
   } catch (error) {
     console.log(error);
 
     toast.error("Camera access denied");
-
     speak("Camera access denied");
 
     setScanning(false);
