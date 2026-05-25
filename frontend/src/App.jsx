@@ -69,9 +69,9 @@ export default function App() {
         <Route element={<Layout />}>
 
 
-          {/* DASHBOARD (ADMIN ONLY OR AUTH USER) */}
+          {/* DASHBOARD (ADMIN ONLY OR AUTH MANAGER) */}
           <Route
-            path="/admin-dashboard"
+            path="/admin"
             element={
               <ProtectedRoute allowedRoles={["ADMIN", "MANAGER"]}>
                 <Dashboard />
@@ -91,7 +91,7 @@ export default function App() {
 
           {/* ADMIN PANEL */}
           <Route
-            path="/admin"
+            path="/admin-dashboard"
             element={
               <ProtectedRoute allowedRoles={["ADMIN"]}>
                 <AdminPanel />
