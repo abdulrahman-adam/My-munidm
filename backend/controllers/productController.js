@@ -1,6 +1,7 @@
 import { v2 as cloudinary } from "cloudinary";
 import Category from "../models/Category.js";
 import Product from "../models/Product.js";
+import { uploadFromBuffer } from "../configs/uploadFromBuffer .js";
 
 /* =========================
    CREATE PRODUCT
@@ -75,12 +76,13 @@ export const createProduct = async (req, res) => {
     }
 
     /* =========================================================
-       HANDLE IMAGES (MOBILE SAFE)
+       HANDLE IMAGES (CLOUDINARY + MEMORY STORAGE SAFE)
     ========================================================= */
 
     let images = [];
 
     if (req.files && Array.isArray(req.files) && req.files.length > 0) {
+
       if (req.files.length > 4) {
         return res.status(400).json({
           success: false,
@@ -89,11 +91,12 @@ export const createProduct = async (req, res) => {
       }
 
       for (const file of req.files) {
-        if (!file?.path) continue;
 
-        const result = await cloudinary.uploader.upload(file.path, {
-          folder: "products",
-        });
+        // skip invalid file
+        if (!file?.buffer) continue;
+
+        // upload buffer to cloudinary
+        const result = await uploadFromBuffer(file.buffer);
 
         images.push({
           url: result.secure_url,
@@ -129,6 +132,7 @@ export const createProduct = async (req, res) => {
     });
 
   } catch (error) {
+
     console.error("CREATE PRODUCT ERROR:", error);
 
     return res.status(500).json({
@@ -143,6 +147,7 @@ export const createProduct = async (req, res) => {
 ========================= */
 export const getByBarcode = async (req, res) => {
   try {
+
     const { barcode } = req.params;
 
     const product = await Product.findOne({
@@ -162,6 +167,7 @@ export const getByBarcode = async (req, res) => {
     });
 
   } catch (error) {
+
     console.log(error);
 
     return res.status(500).json({
@@ -176,6 +182,7 @@ export const getByBarcode = async (req, res) => {
 ========================= */
 export const getProducts = async (req, res) => {
   try {
+
     const products = await Product.findAll({
       where: {
         is_active: true,
@@ -193,11 +200,12 @@ export const getProducts = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      count: products.length, // NEW
+      count: products.length,
       products,
     });
 
   } catch (error) {
+
     console.error("GET_PRODUCTS_ERROR:", error);
 
     return res.status(500).json({
@@ -206,7 +214,6 @@ export const getProducts = async (req, res) => {
     });
   }
 };
-
 /* =========================
    UPDATE PRODUCT
 ========================= */
@@ -228,12 +235,41 @@ export const updateProduct = async (req, res) => {
     }
 
     /* =========================================================
+       SANITIZE INPUTS
+    ========================================================= */
+
+    const category_id = req.body.category_id
+      ? Number(req.body.category_id)
+      : product.category_id;
+
+    const price = req.body.price
+      ? Number(req.body.price)
+      : product.price;
+
+    const cost_price = req.body.cost_price
+      ? Number(req.body.cost_price)
+      : product.cost_price;
+
+    const stock = req.body.stock !== undefined
+      ? Number(req.body.stock)
+      : product.stock;
+
+    const name = req.body.name?.trim() || product.name;
+
+    const barcode = req.body.barcode?.trim() || null;
+
+    const description =
+      req.body.description?.trim() ||
+      product.description;
+
+    /* =========================================================
        HANDLE IMAGES
     ========================================================= */
 
-    let images = product.images;
+    let images = product.images || [];
 
-    if (req.files?.length) {
+    if (req.files && Array.isArray(req.files) && req.files.length > 0) {
+
       if (req.files.length > 4) {
         return res.status(400).json({
           success: false,
@@ -244,12 +280,8 @@ export const updateProduct = async (req, res) => {
       images = [];
 
       for (const file of req.files) {
-        const result = await cloudinary.uploader.upload(
-          file.path,
-          {
-            folder: "products",
-          }
-        );
+
+        const result = await uploadFromBuffer(file.buffer);
 
         images.push({
           url: result.secure_url,
@@ -263,34 +295,19 @@ export const updateProduct = async (req, res) => {
     ========================================================= */
 
     await product.update({
-      category_id: req.body.category_id
-        ? Number(req.body.category_id)
-        : product.category_id,
+      category_id,
+      name,
+      barcode,
+      price,
+      cost_price,
+      stock,
+      description,
 
-      name: req.body.name ?? product.name,
-
-      barcode: req.body.barcode || null,
-
-      price: req.body.price
-        ? Number(req.body.price)
-        : product.price,
-
-      cost_price: req.body.cost_price
-        ? Number(req.body.cost_price)
-        : product.cost_price,
-
-      stock: req.body.stock !== undefined
-        ? Number(req.body.stock)
-        : product.stock,
-
-      description:
-        req.body.description ?? product.description,
-
-      expiration_date: // NEW
-        req.body.expiration_date ??
+      expiration_date:
+        req.body.expiration_date ||
         product.expiration_date,
 
-      expiry_notification_sent: // NEW
+      expiry_notification_sent:
         req.body.expiry_notification_sent ??
         product.expiry_notification_sent,
 
@@ -308,11 +325,11 @@ export const updateProduct = async (req, res) => {
     });
 
   } catch (error) {
-    console.log(error);
+    console.error("UPDATE_PRODUCT_ERROR:", error);
 
     return res.status(500).json({
       success: false,
-      message: error.message,
+      message: error.message || "Internal server error",
     });
   }
 };

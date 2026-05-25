@@ -555,34 +555,60 @@ const createProduct = async (data) => {
   try {
     const formData = new FormData();
 
-    formData.append("category_id", data.category_id);
-    formData.append("name", data.name);
-    formData.append("barcode", data.barcode || "");
-    formData.append("price", data.price);
-    formData.append("cost_price", data.cost_price || "");
-    formData.append("stock", data.stock || 0);
-    formData.append("description", data.description || "");
+    /* =========================
+       BASIC FIELDS (SAFE CAST)
+    ========================= */
 
-    // ✅ NEW FIELD ADDED
+    formData.append("category_id", Number(data.category_id));
+    formData.append("name", data.name?.trim());
+    formData.append("barcode", data.barcode?.trim() || "");
+    formData.append("price", Number(data.price));
+    formData.append("cost_price", Number(data.cost_price || 0));
+    formData.append("stock", Number(data.stock || 0));
+    formData.append("description", data.description?.trim() || "");
+
+    /* =========================
+       OPTIONAL FIELD
+    ========================= */
+
     if (data.expiration_date) {
       formData.append("expiration_date", data.expiration_date);
     }
 
-    // images (max 4)
-    if (data.images && data.images.length > 0) {
+    /* =========================
+       IMAGES (MOBILE SAFE)
+    ========================= */
+
+    if (Array.isArray(data.images) && data.images.length > 0) {
+      if (data.images.length > 4) {
+        toast.error("Maximum 4 images allowed");
+        return;
+      }
+
       data.images.forEach((img) => {
-        formData.append("images", img);
+        if (img) {
+          formData.append("images", img);
+        }
       });
     }
 
-    const res = await axios.post("/api/products/create", formData);
+    /* =========================
+       API CALL
+    ========================= */
 
-    toast.success(res.data.message || "Product created");
+    const res = await axios.post("/api/products/create", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    toast.success(res.data.message || "Product created successfully");
 
     return res.data.product;
+
   } catch (error) {
     toast.error(
-      error.response?.data?.message || "Failed to create product"
+      error?.response?.data?.message || "Failed to create product"
     );
   }
 };
@@ -703,25 +729,66 @@ const updateProduct = async (id, data) => {
   try {
     const formData = new FormData();
 
-    if (data.category_id) formData.append("category_id", data.category_id);
-    if (data.name) formData.append("name", data.name);
-    if (data.barcode) formData.append("barcode", data.barcode);
-    if (data.price) formData.append("price", data.price);
-    if (data.cost_price) formData.append("cost_price", data.cost_price);
-    if (data.stock !== undefined) formData.append("stock", data.stock);
-    if (data.description) formData.append("description", data.description);
+    /* =========================
+       SAFE FIELD APPENDING
+    ========================= */
 
-    // ✅ NEW: expiration date support
+    if (data.category_id !== undefined && data.category_id !== null) {
+      formData.append("category_id", Number(data.category_id));
+    }
+
+    if (data.name) {
+      formData.append("name", data.name.trim());
+    }
+
+    if (data.barcode) {
+      formData.append("barcode", data.barcode.trim());
+    }
+
+    if (data.price !== undefined && data.price !== null) {
+      formData.append("price", Number(data.price));
+    }
+
+    if (data.cost_price !== undefined && data.cost_price !== null) {
+      formData.append("cost_price", Number(data.cost_price));
+    }
+
+    if (data.stock !== undefined) {
+      formData.append("stock", Number(data.stock));
+    }
+
+    if (data.description) {
+      formData.append("description", data.description.trim());
+    }
+
+    /* =========================
+       OPTIONAL FIELD
+    ========================= */
+
     if (data.expiration_date) {
       formData.append("expiration_date", data.expiration_date);
     }
 
-    // images
-    if (data.images && data.images.length > 0) {
+    /* =========================
+       IMAGES (SAFE)
+    ========================= */
+
+    if (Array.isArray(data.images) && data.images.length > 0) {
+      if (data.images.length > 4) {
+        toast.error("Maximum 4 images allowed");
+        return;
+      }
+
       data.images.forEach((img) => {
-        formData.append("images", img);
+        if (img) {
+          formData.append("images", img);
+        }
       });
     }
+
+    /* =========================
+       API CALL
+    ========================= */
 
     const res = await axios.put(`/api/products/${id}`, formData, {
       headers: {
@@ -729,12 +796,13 @@ const updateProduct = async (id, data) => {
       },
     });
 
-    toast.success(res.data.message || "Product updated");
+    toast.success(res.data.message || "Product updated successfully");
 
     return res.data.product;
+
   } catch (error) {
     toast.error(
-      error.response?.data?.message || "Update failed"
+      error?.response?.data?.message || "Update failed"
     );
   }
 };
