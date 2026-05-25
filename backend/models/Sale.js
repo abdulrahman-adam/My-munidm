@@ -1,26 +1,95 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../configs/db.js";
 
-const Sale = sequelize.define("Sale", {
-  id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+const Sale = sequelize.define(
+  "Sale",
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
 
-  user_id: { type: DataTypes.INTEGER, allowNull: false },
+    /* =========================
+       CASHIER
+    ========================= */
+    user_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
 
-  total: { type: DataTypes.DECIMAL(10,2), allowNull: false },
+    cashier_name: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
 
-  payment_method: {
-    type: DataTypes.ENUM("CASH", "CARD", "MOBILE"),
-    defaultValue: "CASH",
+    /* =========================
+       INVOICE NUMBER
+    ========================= */
+    invoice_number: {
+      type: DataTypes.STRING,
+      unique: true,
+      allowNull: false,
+    },
+
+    /* =========================
+       TOTAL
+    ========================= */
+    total: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false,
+    },
+
+    /* =========================
+       PAYMENT
+    ========================= */
+    payment_method: {
+      type: DataTypes.ENUM(
+        "CASH",
+        "CARD",
+        "MOBILE"
+      ),
+      defaultValue: "CASH",
+    },
+
+    payment_reference: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+
+    /* =========================
+       STATUS
+    ========================= */
+    status: {
+      type: DataTypes.ENUM(
+        "COMPLETED",
+        "CANCELLED",
+        "PENDING"
+      ),
+      defaultValue: "COMPLETED",
+    },
+
+    /* =========================
+       SHIFT SYSTEM
+    ========================= */
+    shift_id: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+
+    /* =========================
+       OFFLINE MODE
+    ========================= */
+    offline_synced: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
   },
 
-  status: {
-    type: DataTypes.ENUM("COMPLETED", "CANCELLED"),
-    defaultValue: "COMPLETED",
-  },
-}, {
-  tableName: "sales",
-  timestamps: true,
-});
-
+  {
+    tableName: "sales",
+    timestamps: true,
+  }
+);
 
 export default Sale;

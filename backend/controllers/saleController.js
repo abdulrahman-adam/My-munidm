@@ -12,11 +12,15 @@ export const createSale = async (req, res) => {
   try {
     const {
       user_id,
+      cashier_name,
       payment_method,
-      items, // [{ product_id, quantity }]
+      invoice_number,
+      items,
     } = req.body;
 
     if (!items || items.length === 0) {
+      await transaction.rollback();
+
       return res.status(400).json({
         success: false,
         message: "No items in sale",
@@ -29,9 +33,14 @@ export const createSale = async (req, res) => {
        CHECK STOCK + CALCULATE TOTAL
     ========================================================= */
     for (const item of items) {
-      const product = await Product.findByPk(item.product_id);
+      const product = await Product.findByPk(
+        item.product_id,
+        { transaction }
+      );
 
       if (!product) {
+        await transaction.rollback();
+
         return res.status(404).json({
           success: false,
           message: "Product not found",
@@ -39,13 +48,16 @@ export const createSale = async (req, res) => {
       }
 
       if (product.stock < item.quantity) {
+        await transaction.rollback();
+
         return res.status(400).json({
           success: false,
           message: `Not enough stock for ${product.name}`,
         });
       }
 
-      total += Number(product.price) * item.quantity;
+      total +=
+        Number(product.price) * item.quantity;
     }
 
     /* =========================================================
@@ -54,6 +66,8 @@ export const createSale = async (req, res) => {
     const sale = await Sale.create(
       {
         user_id,
+        cashier_name,
+        invoice_number,
         total,
         payment_method,
         status: "COMPLETED",
@@ -65,23 +79,63 @@ export const createSale = async (req, res) => {
        CREATE SALE ITEMS + REDUCE STOCK
     ========================================================= */
     for (const item of items) {
-      const product = await Product.findByPk(item.product_id);
+      const product = await Product.findByPk(
+        item.product_id,
+        { transaction }
+      );
 
+      /* =========================
+         CREATE SALE ITEM
+      ========================= */
       await SaleItem.create(
         {
           sale_id: sale.id,
           product_id: product.id,
           quantity: item.quantity,
           price: product.price,
-          subtotal: Number(product.price) * item.quantity,
+          subtotal:
+            Number(product.price) *
+            item.quantity,
         },
         { transaction }
       );
 
-      // 🔥 REDUCE STOCK HERE (IMPORTANT)
-      product.stock = product.stock - item.quantity;
+      /* =========================
+         REDUCE STOCK
+      ========================= */
+      product.stock =
+        product.stock - item.quantity;
+
       await product.save({ transaction });
+
+      /* =========================
+         BARCODE HISTORY
+      ========================= */
+      await BarcodeHistory.create(
+        {
+          sale_id: sale.id,
+          product_id: product.id,
+          barcode: product.barcode,
+          cashier_id: user_id,
+          cashier_name,
+          quantity: item.quantity,
+        },
+        { transaction }
+      );
     }
+
+    /* =========================================================
+       DAILY SALES LOG
+    ========================================================= */
+    await DailySale.create(
+      {
+        sale_id: sale.id,
+        total,
+        payment_method,
+        cashier_id: user_id,
+      },
+      { transaction }
+    );
 
     await transaction.commit();
 
@@ -90,6 +144,7 @@ export const createSale = async (req, res) => {
       message: "Sale completed successfully",
       sale,
     });
+
   } catch (error) {
     await transaction.rollback();
 

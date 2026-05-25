@@ -64,3 +64,4 @@ frontend/.env*
 backend/.env*
 
 docs/
+test/
