@@ -6,23 +6,28 @@ export default function ReportsDashboard() {
   const { getSalesAnalytics, getLowStockProducts, getReorderSuggestions } =
     useAppContext();
 
-  const [analytics, setAnalytics] = useState(null);
-  const [lowStock, setLowStock] = useState([]);
-  const [reorder, setReorder] = useState([]);
 
-  useEffect(() => {
-    const load = async () => {
+  const [analytics, setAnalytics] = useState({ daily: [] });
+const [lowStock, setLowStock] = useState([]);
+const [reorder, setReorder] = useState([]);
+
+ useEffect(() => {
+  const load = async () => {
+    try {
       const a = await getSalesAnalytics();
       const l = await getLowStockProducts();
       const r = await getReorderSuggestions();
 
-      setAnalytics(a);
-      setLowStock(l);
-      setReorder(r);
-    };
+      setAnalytics(a || { daily: [] });
+      setLowStock(l || []);
+      setReorder(r || []);
+    } catch (err) {
+      console.error("ReportsDashboard error:", err);
+    }
+  };
 
-    load();
-  }, []);
+  load();
+}, []);
 
 
   const downloadReport = async () => {

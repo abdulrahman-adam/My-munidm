@@ -1,23 +1,58 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { TrendingUp, Users, ShoppingBag, Clock } from "lucide-react";
 import { useAppContext } from "../../context/AppContext";
 import Register from "../auth/Register";
 
 export default function Dashboard() {
-  const { user, isAdmin, isManager, currency, offlineSales } = useAppContext();
+  const {
+    user,
+    isAdmin,
+    isManager,
+    currency,
+    offlineSales,
+    getDashboardStats,
+    getRecentSales,
+  } = useAppContext();
 
   const [showRegister, setShowRegister] = useState(false);
+
+  const [statsData, setStatsData] = useState({
+    todaySales: 0,
+    totalOrders: 0,
+    activeCashiers: 0,
+  });
+
+  const [transactions, setTransactions] = useState([]);
+
+  /* =========================
+     LOAD REAL DATA
+  ========================= */
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const stats = await getDashboardStats();
+        const sales = await getRecentSales();
+
+        setStatsData(stats);
+        setTransactions(sales || []);
+      } catch (err) {
+        console.log("Dashboard load error:", err);
+      }
+    };
+
+    load();
+  }, []);
 
   const stats = [
     {
       label: "Today's Sales",
-      value: `${currency}1,240.50`,
+      value: `${currency}${statsData.todaySales}`,
       icon: TrendingUp,
       color: "bg-green-100 text-green-600",
     },
     {
       label: "Total Orders",
-      value: "84",
+      value: statsData.totalOrders,
       icon: ShoppingBag,
       color: "bg-blue-100 text-blue-600",
     },
@@ -29,7 +64,7 @@ export default function Dashboard() {
     },
     {
       label: "Active Cashiers",
-      value: "3",
+      value: statsData.activeCashiers,
       icon: Users,
       color: "bg-purple-100 text-purple-600",
     },
@@ -37,6 +72,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
+
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -48,7 +84,6 @@ export default function Dashboard() {
           </p>
         </div>
 
-        {/* OPEN REGISTER MODAL (ADMIN ONLY OPTIONAL) */}
         {isAdmin && (
           <button
             onClick={() => setShowRegister(true)}
@@ -86,16 +121,33 @@ export default function Dashboard() {
 
       {/* MAIN CONTENT */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* TRANSACTIONS */}
+
+        {/* TRANSACTIONS (NOW REAL DATA) */}
         <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-lg font-bold text-gray-800 mb-4">
             Recent Transactions
           </h3>
 
-          <div className="flex flex-col items-center justify-center h-48 text-gray-400">
-            <ShoppingBag className="h-10 w-10 mb-2 opacity-30" />
-            <p>Connect backend API to display real-time history.</p>
-          </div>
+          {transactions.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-48 text-gray-400">
+              <ShoppingBag className="h-10 w-10 mb-2 opacity-30" />
+              <p>No transactions yet</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {transactions.map((t) => (
+                <div
+                  key={t.id}
+                  className="flex justify-between border-b pb-2 text-sm"
+                >
+                  <span>{t.invoice_number || "SALE"}</span>
+                  <span className="font-bold text-gray-700">
+                    {currency}{t.total}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* SYSTEM STATUS */}
@@ -105,6 +157,7 @@ export default function Dashboard() {
           </h3>
 
           <div className="space-y-4">
+
             <div className="flex justify-between items-center pb-3 border-b border-gray-100">
               <span className="text-gray-600">Network</span>
               <span className="flex items-center gap-2 text-sm font-medium text-green-600 bg-green-50 px-2 py-1 rounded">
@@ -126,6 +179,7 @@ export default function Dashboard() {
                 {user?.role}
               </span>
             </div>
+
           </div>
         </div>
       </div>

@@ -772,7 +772,7 @@ const deleteProduct = async (id) => {
 ========================================================= */
   const addStock = async (data) => {
     try {
-      const res = await axios.post("/inventory/add-stock", data);
+      const res = await axios.post("/api/inventory/add-stock", data);
 
       toast.success("Stock added successfully");
 
@@ -789,7 +789,7 @@ const deleteProduct = async (id) => {
 ========================================================= */
   const removeStock = async (data) => {
     try {
-      const res = await axios.post("/inventory/remove-stock", data);
+      const res = await axios.post("/api/inventory/remove-stock", data);
 
       toast.success("Stock removed successfully");
 
@@ -806,7 +806,7 @@ const deleteProduct = async (id) => {
 ========================================================= */
   const adjustStock = async (data) => {
     try {
-      const res = await axios.put("/inventory/adjust-stock", data);
+      const res = await axios.put("/api/inventory/adjust-stock", data);
 
       toast.success("Stock adjusted successfully");
 
@@ -823,7 +823,7 @@ const deleteProduct = async (id) => {
 ========================================================= */
   const getInventoryLogs = async () => {
     try {
-      const res = await axios.get("/inventory/logs");
+      const res = await axios.get("/api/inventory/logs");
 
       setInventoryLogs(res.data.logs);
 
@@ -839,7 +839,7 @@ const deleteProduct = async (id) => {
 ========================================================= */
   const getProductHistory = async (product_id) => {
     try {
-      const res = await axios.get(`/inventory/product/${product_id}`);
+      const res = await axios.get(`/api/inventory/product/${product_id}`);
 
       return res.data.logs;
     } catch (error) {
@@ -853,7 +853,7 @@ const deleteProduct = async (id) => {
 ========================= */
 const getLowStockProducts = async () => {
   try {
-    const res = await axios.get("/inventory/low-stock");
+    const res = await axios.get("/api/inventory/low-stock");
     return res.data.products;
   } catch (error) {
     toast.error("Failed to load low stock");
@@ -865,7 +865,7 @@ const getLowStockProducts = async () => {
 ========================= */
 const getSalesAnalytics = async () => {
   try {
-    const res = await axios.get("/inventory/analytics");
+    const res = await axios.get("/api/inventory/analytics");
     return res.data;
   } catch (error) {
     toast.error("Failed to load analytics");
@@ -877,7 +877,7 @@ const getSalesAnalytics = async () => {
 ========================= */
 const getReorderSuggestions = async () => {
   try {
-    const res = await axios.get("/inventory/reorder");
+    const res = await axios.get("/api/inventory/reorder");
     return res.data.suggestions;
   } catch (error) {
     toast.error("Failed to load reorder data");

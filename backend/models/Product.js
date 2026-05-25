@@ -1,6 +1,7 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../configs/db.js";
 import Category from "./Category.js";
+import InventoryLog from "./InventoryLog.js";
 
 const Product = sequelize.define(
   "Product",
@@ -103,6 +104,17 @@ Category.hasMany(Product, {
 Product.belongsTo(Category, {
   foreignKey: "category_id",
   as: "category",
+});
+
+
+Product.hasMany(InventoryLog, {
+  foreignKey: "product_id",
+  as: "inventoryLogs",
+});
+
+InventoryLog.belongsTo(Product, {
+  foreignKey: "product_id",
+  as: "product",
 });
 
 export default Product;

@@ -3,6 +3,7 @@ import { Op, fn, col } from "sequelize";
 
 import Product from "../models/Product.js";
 import InventoryLog from "../models/InventoryLog.js";
+import Sale from "../models/Sale.js";
 
 /* =========================================================
    ADD STOCK (RESTOCK PRODUCT)
@@ -182,16 +183,19 @@ export const getInventoryLogs = async (req, res) => {
 
     return res.status(200).json({
       success: true,
+      count: logs.length,
       logs,
     });
+
   } catch (error) {
+    console.log("GET INVENTORY LOGS ERROR:", error);
+
     return res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 };
-
 /* =========================================================
    GET PRODUCT HISTORY
 ========================================================= */
