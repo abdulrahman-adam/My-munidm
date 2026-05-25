@@ -13,6 +13,7 @@ import categoryRouter from "./routes/categoryRoute.js";
 import productRouter from "./routes/productRoute.js";
 import returnRouter from "./routes/returnRoutes.js";
 import saleRouter from "./routes/saleRoute.js";
+import inventoryRouter from "./routes/inventoryRoute.js";
 
 dotenv.config();
 
@@ -86,6 +87,7 @@ app.use("/api/category", categoryRouter);
 app.use("/api/products", productRouter);
 app.use("/api/returns", returnRouter);
 app.use("/api/sales", saleRouter);
+app.use("/api/inventory", inventoryRouter);
 
 /* -------------------- HEALTH CHECK -------------------- */
 app.get("/", (req, res) => {

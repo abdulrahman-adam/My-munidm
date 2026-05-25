@@ -5,6 +5,7 @@ import {
   getTopProducts,
   getLowStockProducts,
   getRevenueReport,
+  generateDailyReport,
 } from "../controllers/reportController.js";
 
 import { protect } from "../middlewares/authMiddleware.js";
@@ -36,12 +37,8 @@ reportRouter.get(
   getLowStockProducts
 );
 
-// ✅ Revenue report
-reportRouter.get(
-  "/revenue",
-  protect,
-  authorizeRoles("MANAGER", "ADMIN"),
-  getRevenueReport
-);
+
+
+reportRouter.get("/daily-report", protect,authorizeRoles("MANAGER", "ADMIN"), generateDailyReport);
 
 export default reportRouter;
