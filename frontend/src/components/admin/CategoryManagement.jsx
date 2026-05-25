@@ -66,19 +66,28 @@ export default function CategoryManagement() {
   /* =========================
      SUBMIT
   ========================= */
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+ const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (!form.name) return toast.error("Name required");
+  if (!form.name) return toast.error("Name required");
 
-    if (editingCategory) {
-      await updateCategory(editingCategory.id, form);
-    } else {
-      await createCategory(form);
-    }
+  const formData = new FormData();
 
-    setShowModal(false);
-  };
+  formData.append("name", form.name);
+  formData.append("description", form.description);
+
+  form.images.forEach((file) => {
+    formData.append("images", file);
+  });
+
+  if (editingCategory) {
+    await updateCategory(editingCategory.id, formData);
+  } else {
+    await createCategory(formData);
+  }
+
+  setShowModal(false);
+};
 
   console.log("CATEGORIES:", categories);
 
