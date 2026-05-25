@@ -6,27 +6,31 @@ services:
     image: mysql:8.0
     container_name: munidm_db
     restart: always
-    # Optimized for compatibility with Node/PHP drivers
+
     command: --default-authentication-plugin=mysql_native_password
-    env_file:
-      - ./backend/.env
+
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
       MYSQL_DATABASE: ${DB_NAME}
       MYSQL_USER: ${DB_USER}
       MYSQL_PASSWORD: ${DB_PASSWORD}
+
     ports:
       - "3307:3306"
+
     volumes:
       - munidm_mysql_data:/var/lib/mysql
+
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 30s
+
     networks:
       - munidm-network
+
 
   # ========================
   # BACKEND (Node.js)
@@ -35,30 +39,39 @@ services:
     build: ./backend
     container_name: munidm_backend
     restart: always
+
     env_file:
       - ./backend/.env
+
     environment:
-      - MYSQL_HOST=db  # Internal Docker DNS name
-      - PORT=5000
+      DB_HOST: db
+      PORT: 5000
+
     ports:
-      - "3005:5000"
+      - "5000:5000"
+
     depends_on:
       db:
         condition: service_healthy
+
     networks:
       - munidm-network
 
+
   # ========================
-  # FRONTEND (React/Vite + Nginx)
+  # FRONTEND (React + Nginx)
   # ========================
   frontend:
     build: ./frontend
     container_name: munidm_frontend
     restart: always
+
     ports:
       - "8080:80"
+
     networks:
       - munidm-network
+
 
   # ========================
   # PHPMYADMIN
@@ -67,21 +80,33 @@ services:
     image: phpmyadmin/phpmyadmin
     container_name: munidm_phpmyadmin
     restart: always
+
     ports:
       - "8089:80"
+
     environment:
-      - PMA_HOST=db
-      - PMA_PORT=3306
-      - PMA_ARBITRARY=1
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+
     depends_on:
       db:
         condition: service_healthy
+
     networks:
       - munidm-network
 
+
+# ========================
+# VOLUMES
+# ========================
 volumes:
   munidm_mysql_data:
 
+
+# ========================
+# NETWORK
+# ========================
 networks:
   munidm-network:
     driver: bridge

@@ -6,11 +6,62 @@ import { v2 as cloudinary } from "cloudinary";
 /* =========================================================
    CREATE CATEGORY
 ========================================================= */
+// export const createCategory = async (req, res) => {
+//   try {
+//     const { name, description } = req.body;
+
+//     // check duplicate
+//     const existing = await Category.findOne({ where: { name } });
+//     if (existing) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Category already exists",
+//       });
+//     }
+
+//     // upload images to cloudinary (if any)
+//    let images = [];
+
+// if (req.files && req.files.length > 0) {
+//   for (const file of req.files) {
+//     const result = await uploadFromBuffer(file.buffer);
+
+//     images.push({
+//       url: result.secure_url,
+//       public_id: result.public_id,
+//     });
+//   }
+// }
+
+//     const category = await Category.create({
+//       name,
+//       description,
+//       images,
+//     });
+
+//     console.log("FILES:", req.files);
+
+//     return res.status(201).json({
+//       success: true,
+//       message: "Category created successfully",
+//       category,
+//     });
+//   } catch (error) {
+//     return res.status(500).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
+
+
 export const createCategory = async (req, res) => {
   try {
+    console.log("FILES:", req.files);
+    console.log("BODY:", req.body);
+
     const { name, description } = req.body;
 
-    // check duplicate
     const existing = await Category.findOne({ where: { name } });
     if (existing) {
       return res.status(400).json({
@@ -19,19 +70,18 @@ export const createCategory = async (req, res) => {
       });
     }
 
-    // upload images to cloudinary (if any)
-   let images = [];
+    let images = [];
 
-if (req.files && req.files.length > 0) {
-  for (const file of req.files) {
-    const result = await uploadFromBuffer(file.buffer);
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        const result = await uploadFromBuffer(file.buffer);
 
-    images.push({
-      url: result.secure_url,
-      public_id: result.public_id,
-    });
-  }
-}
+        images.push({
+          url: result.secure_url,
+          public_id: result.public_id,
+        });
+      }
+    }
 
     const category = await Category.create({
       name,
@@ -45,6 +95,8 @@ if (req.files && req.files.length > 0) {
       category,
     });
   } catch (error) {
+    console.log("CREATE CATEGORY ERROR:", error);
+
     return res.status(500).json({
       success: false,
       message: error.message,
