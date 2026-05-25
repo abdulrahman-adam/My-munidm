@@ -18,6 +18,7 @@ import toast from "react-hot-toast";
 ========================= */
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import SplitPaymentModal from "../../components/payment/SplitPaymentModal";
 
 export default function Cashier() {
   const { getProductByBarcode, createSale } = useAppContext();
@@ -26,9 +27,11 @@ export default function Cashier() {
   const [total, setTotal] = useState(0);
   const [scanning, setScanning] = useState(false);
 
+  
   /* =========================
-     🆕 PAYMENT PAGE STATE
+  🆕 PAYMENT PAGE STATE
   ========================= */
+  const [paymentData, setPaymentData] = useState(null);
   const [showPayment, setShowPayment] = useState(false);
 
   const scanLock = useRef(false);
@@ -327,6 +330,36 @@ export default function Cashier() {
 
     setShowPayment(false);
   };
+
+
+
+  const handlePayment = async ({ cash, card }) => {
+  try {
+    const items = cart.map((p) => ({
+      product_id: p.id,
+      quantity: p.quantity,
+    }));
+
+    await createSale({
+      user_id: 1,
+      payment_method: card > 0 ? "CARD+CASH" : "CASH",
+      payment_split: {
+        cash,
+        card,
+      },
+      items,
+    });
+
+    speak("Payment completed successfully");
+    toast.success("Payment successful");
+
+    setCart([]);
+    setShowPayment(false);
+  } catch (error) {
+    toast.error("Payment failed");
+  }
+};
+
 
   /* =========================
      🧾 PDF DOWNLOAD
@@ -669,7 +702,13 @@ export default function Cashier() {
                 className="w-full bg-black hover:bg-gray-900 transition text-white py-4 rounded-2xl font-black text-lg flex items-center justify-center gap-2"
               >
                 <Receipt />
-                Pay Cash
+               {showPayment && (
+  <SplitPaymentModal
+    total={total}
+    onClose={() => setShowPayment(false)}
+    onPay={handlePayment}
+  />
+)}
               </button>
 
             </div>

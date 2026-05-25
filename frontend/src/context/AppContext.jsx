@@ -51,8 +51,11 @@ export const AppContextProvider = ({ children }) => {
   const [catLoading, setCatLoading] = useState(false);
 
   /* =========================================================
-     POS STATES
+    INVENTORY STATES
   ========================================================= */
+
+  const [inventoryLogs, setInventoryLogs] = useState([]);
+  const [sales, setSales] = useState([]);
 
   const [cart, setCart] = useState(
     JSON.parse(localStorage.getItem("cart")) || []
@@ -764,7 +767,122 @@ const deleteProduct = async (id) => {
   }
 };
 
+/* =========================================================
+   ADD STOCK
+========================================================= */
+  const addStock = async (data) => {
+    try {
+      const res = await axios.post("/inventory/add-stock", data);
 
+      toast.success("Stock added successfully");
+
+      return res.data;
+    } catch (error) {
+      console.log(error);
+      toast.error(error?.response?.data?.message || "Add stock failed");
+    }
+  };
+
+
+  /* =========================================================
+   REMOVE STOCK
+========================================================= */
+  const removeStock = async (data) => {
+    try {
+      const res = await axios.post("/inventory/remove-stock", data);
+
+      toast.success("Stock removed successfully");
+
+      return res.data;
+    } catch (error) {
+      console.log(error);
+      toast.error(error?.response?.data?.message || "Remove stock failed");
+    }
+  };
+
+
+  /* =========================================================
+   ADJUST STOCK
+========================================================= */
+  const adjustStock = async (data) => {
+    try {
+      const res = await axios.put("/inventory/adjust-stock", data);
+
+      toast.success("Stock adjusted successfully");
+
+      return res.data;
+    } catch (error) {
+      console.log(error);
+      toast.error(error?.response?.data?.message || "Adjust stock failed");
+    }
+  };
+
+
+  /* =========================================================
+   GET INVENTORY LOGS
+========================================================= */
+  const getInventoryLogs = async () => {
+    try {
+      const res = await axios.get("/inventory/logs");
+
+      setInventoryLogs(res.data.logs);
+
+      return res.data.logs;
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to load inventory logs");
+    }
+  };
+
+  /* =========================================================
+   GET PRODUCT HISTORY
+========================================================= */
+  const getProductHistory = async (product_id) => {
+    try {
+      const res = await axios.get(`/inventory/product/${product_id}`);
+
+      return res.data.logs;
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to load product history");
+    }
+  };
+
+/* =========================
+   LOW STOCK
+========================= */
+const getLowStockProducts = async () => {
+  try {
+    const res = await axios.get("/inventory/low-stock");
+    return res.data.products;
+  } catch (error) {
+    toast.error("Failed to load low stock");
+  }
+};
+
+/* =========================
+   ANALYTICS
+========================= */
+const getSalesAnalytics = async () => {
+  try {
+    const res = await axios.get("/inventory/analytics");
+    return res.data;
+  } catch (error) {
+    toast.error("Failed to load analytics");
+  }
+};
+
+/* =========================
+   REORDER
+========================= */
+const getReorderSuggestions = async () => {
+  try {
+    const res = await axios.get("/inventory/reorder");
+    return res.data.suggestions;
+  } catch (error) {
+    toast.error("Failed to load reorder data");
+  }
+};
 
 // CREATE SALE (CASHIER CHECKOUT)
 const createSale = async (data) => {
@@ -791,9 +909,6 @@ const createReturn = async (data) => {
     toast.error(error.response?.data?.message || "Return failed");
   }
 };
-
-
-
 
 
   /* =========================================================
@@ -992,6 +1107,18 @@ const createReturn = async (data) => {
       updateProduct,
       deleteProduct,
       getProductByBarcode,
+
+
+      /* INVENTORY */
+        addStock,
+        removeStock,
+        adjustStock,
+        getInventoryLogs,
+        inventoryLogs,
+        getProductHistory,
+        getLowStockProducts,
+        getSalesAnalytics,
+        getReorderSuggestions,
     // POS
     cart,
     setCart,

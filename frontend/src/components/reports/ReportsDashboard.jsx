@@ -1,0 +1,100 @@
+import { useEffect, useState } from "react";
+import { TrendingDown, Package, BarChart3 } from "lucide-react";
+import { useAppContext } from "../../context/AppContext";
+
+export default function ReportsDashboard() {
+  const { getSalesAnalytics, getLowStockProducts, getReorderSuggestions } =
+    useAppContext();
+
+  const [analytics, setAnalytics] = useState(null);
+  const [lowStock, setLowStock] = useState([]);
+  const [reorder, setReorder] = useState([]);
+
+  useEffect(() => {
+    const load = async () => {
+      const a = await getSalesAnalytics();
+      const l = await getLowStockProducts();
+      const r = await getReorderSuggestions();
+
+      setAnalytics(a);
+      setLowStock(l);
+      setReorder(r);
+    };
+
+    load();
+  }, []);
+
+
+  const downloadReport = async () => {
+  window.open(
+    `${import.meta.env.VITE_BACKEND_URL}/reports/daily-report`,
+    "_blank"
+  );
+};
+
+
+  return (
+    <div className="p-4 md:p-6 space-y-6">
+      {/* HEADER */}
+      <h2 className="text-2xl font-bold flex items-center gap-2">
+        <BarChart3 /> Sales Intelligence Dashboard
+      </h2>
+
+      {/* LOW STOCK */}
+      <div className="bg-white p-4 rounded-xl border">
+        <h3 className="font-bold flex items-center gap-2 text-red-600">
+          <TrendingDown /> Low Stock Alerts
+        </h3>
+
+        <div className="mt-3 grid md:grid-cols-3 gap-3">
+          {lowStock.map((p) => (
+            <div key={p.id} className="p-3 border rounded-lg bg-red-50">
+              <p className="font-bold">{p.name}</p>
+              <p>Stock: {p.stock}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* REORDER */}
+      <div className="bg-white p-4 rounded-xl border">
+        <h3 className="font-bold flex items-center gap-2 text-blue-600">
+          <Package /> Auto Reorder Suggestions
+        </h3>
+
+        <div className="mt-3 grid md:grid-cols-3 gap-3">
+          {reorder.map((p) => (
+            <div key={p.product_id} className="p-3 border rounded-lg">
+              <p className="font-bold">{p.name}</p>
+              <p>Stock: {p.stock}</p>
+              <p className="text-green-600">Suggested: {p.suggested_order}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ANALYTICS */}
+      <div className="bg-white p-4 rounded-xl border">
+        <h3 className="font-bold">Daily Sales</h3>
+
+        <div className="space-y-2 mt-3">
+          {analytics?.daily?.map((d, i) => (
+            <div key={i} className="flex justify-between border-b py-1">
+              <span>{d.date}</span>
+              <span>{d.total} €</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="space-y-2 mt-3">
+          <button
+            onClick={downloadReport}
+            className="bg-black text-white px-4 py-2 rounded-lg"
+          >
+            Download Daily PDF Report
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

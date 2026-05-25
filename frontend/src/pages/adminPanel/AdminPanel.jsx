@@ -12,6 +12,8 @@ import Register from "../auth/Register";
 import UserManagement from "../../components/admin/UserManagement";
 import CategoryManagement from "../../components/admin/CategoryManagement"; // ✅ ADD THIS
 import ProductManagement from "../../components/admin/ProductManagement";
+import InventoryDashboard from "../../components/inventory/InventoryDashboard";
+import ReportsDashboard from "../../components/reports/ReportsDashboard";
 
 export default function AdminPanel() {
   const [showRegister, setShowRegister] = useState(false);
@@ -121,19 +123,11 @@ export default function AdminPanel() {
   <ProductManagement />
 )}
 
-      {activeSection === "reports" && (
-        <div className="bg-white p-6 rounded-xl border shadow-sm">
-          <h2 className="text-xl font-bold mb-4">Reports</h2>
-          <p className="text-gray-500">📈 Reports coming soon...</p>
-        </div>
-      )}
+     {activeSection === "reports" && (
+  <ReportsDashboard />
+)}
 
-      {activeSection === "database" && (
-        <div className="bg-white p-6 rounded-xl border shadow-sm">
-          <h2 className="text-xl font-bold mb-4">Database</h2>
-          <p className="text-gray-500">🗄️ Sync tools coming soon...</p>
-        </div>
-      )}
+     {activeSection === "database" && <InventoryDashboard />}
 
       {activeSection === "" && (
         <div className="bg-white p-6 rounded-xl border shadow-sm">
