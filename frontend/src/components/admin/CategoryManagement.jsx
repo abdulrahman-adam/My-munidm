@@ -91,28 +91,36 @@ export default function CategoryManagement() {
       return;
     }
 
-    try {
-      if (editingCategory) {
-        await updateCategory(editingCategory.id, form);
-        // toast.success("Category updated successfully");
-        speak("Category updated successfully");
-      } else {
-        await createCategory(form);
-        // toast.success("Category created successfully");
-        speak("Category created successfully");
-      }
 
-      setShowModal(false);
-    } catch (error) {
-      const msg =
-        error?.response?.data?.message ||
-        (editingCategory
-          ? "Failed to update category"
-          : "Failed to create category");
 
-      toast.error(msg);
-      speak(msg);
-    }
+try {
+  const isUpdate = !!editingCategory;
+
+  if (isUpdate) {
+    await updateCategory(editingCategory.id, form);
+    speak("Category updated successfully");
+  } else {
+    await createCategory(form);
+    speak("Category created successfully");
+  }
+
+  setShowModal(false);
+
+} catch (error) {
+  const isUpdate = !!editingCategory;
+
+  const msg =
+    error?.response?.data?.message ||
+    (isUpdate
+      ? "Failed to update category"
+      : "Failed to create category");
+
+  toast.error(msg);
+  speak(msg);
+}
+
+
+
   };
 
 

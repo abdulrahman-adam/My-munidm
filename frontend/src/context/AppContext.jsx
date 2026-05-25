@@ -470,6 +470,7 @@ const hasRole = (...roles) => {
       toast.error(
         error.response?.data?.message || "Failed to load categories"
       );
+      throw error; // ⭐ IMPORTANT FIX
       return [];
     } finally {
       setCatLoading(false);
@@ -513,6 +514,8 @@ const hasRole = (...roles) => {
       toast.error(
         error.response?.data?.message || "Update failed"
       );
+
+      throw error; // ⭐ IMPORTANT FIX
     }
   };
 
