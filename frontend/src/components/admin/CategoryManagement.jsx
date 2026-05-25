@@ -21,6 +21,21 @@ export default function CategoryManagement() {
   });
 
   /* =========================
+     VOICE ENGINE
+  ========================= */
+  const speak = (text) => {
+    if (!("speechSynthesis" in window)) return;
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "en-US";
+    utterance.rate = 1;
+    utterance.pitch = 1;
+
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+  };
+
+  /* =========================
      HANDLE INPUT
   ========================= */
   const handleChange = (e) => {
@@ -35,6 +50,7 @@ export default function CategoryManagement() {
 
     if (files.length > 4) {
       toast.error("Maximum 4 images allowed");
+      speak("Maximum 4 images allowed");
       return;
     }
 
@@ -64,23 +80,42 @@ export default function CategoryManagement() {
   };
 
   /* =========================
-     SUBMIT
+     SUBMIT (CREATE / UPDATE)
   ========================= */
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.name) return toast.error("Name required");
-
-    if (editingCategory) {
-      await updateCategory(editingCategory.id, form);
-    } else {
-      await createCategory(form);
+    if (!form.name) {
+      toast.error("Name required");
+      speak("Name is required");
+      return;
     }
 
-    setShowModal(false);
+    try {
+      if (editingCategory) {
+        await updateCategory(editingCategory.id, form);
+        // toast.success("Category updated successfully");
+        speak("Category updated successfully");
+      } else {
+        await createCategory(form);
+        // toast.success("Category created successfully");
+        speak("Category created successfully");
+      }
+
+      setShowModal(false);
+    } catch (error) {
+      const msg =
+        error?.response?.data?.message ||
+        (editingCategory
+          ? "Failed to update category"
+          : "Failed to create category");
+
+      toast.error(msg);
+      speak(msg);
+    }
   };
 
-  console.log("CATEGORIES:", categories);
+
 
   return (
     <div className="space-y-6">
@@ -145,7 +180,20 @@ export default function CategoryManagement() {
                 </button>
 
                 <button
-                  onClick={() => deleteCategory(cat.id)}
+                  onClick={async () => {
+                    try {
+                      await deleteCategory(cat.id);
+                      // toast.success("Category deleted successfully");
+                      speak("Category deleted successfully");
+                    } catch (error) {
+                      const msg =
+                        error?.response?.data?.message ||
+                        "Failed to delete category";
+
+                      toast.error(msg);
+                      speak(msg);
+                    }
+                  }}
                   className="flex items-center gap-1 text-red-600 hover:text-red-800"
                 >
                   <Trash2 className="h-4 w-4" />

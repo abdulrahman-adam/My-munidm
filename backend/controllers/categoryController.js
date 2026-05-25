@@ -1,5 +1,7 @@
+import { uploadFromBuffer } from "../configs/uploadFromBuffer .js";
 import Category from "../models/Category.js";
 import { v2 as cloudinary } from "cloudinary";
+
 
 /* =========================================================
    CREATE CATEGORY
@@ -18,20 +20,18 @@ export const createCategory = async (req, res) => {
     }
 
     // upload images to cloudinary (if any)
-    let images = [];
+   let images = [];
 
-    if (req.files && req.files.length > 0) {
-      for (const file of req.files) {
-        const result = await cloudinary.uploader.upload(file.path, {
-          folder: "categories",
-        });
+if (req.files && req.files.length > 0) {
+  for (const file of req.files) {
+    const result = await uploadFromBuffer(file.buffer);
 
-        images.push({
-          url: result.secure_url,
-          public_id: result.public_id,
-        });
-      }
-    }
+    images.push({
+      url: result.secure_url,
+      public_id: result.public_id,
+    });
+  }
+}
 
     const category = await Category.create({
       name,
@@ -114,22 +114,18 @@ export const updateCategory = async (req, res) => {
     }
 
     // optional new images
-    let images = category.images || [];
+   let images = category.images || [];
 
-    if (req.files && req.files.length > 0) {
-      images = [];
+if (req.files && req.files.length > 0) {
+  const uploaded = await Promise.all(
+    req.files.map((file) => uploadFromBuffer(file.buffer))
+  );
 
-      for (const file of req.files) {
-        const result = await cloudinary.uploader.upload(file.path, {
-          folder: "categories",
-        });
-
-        images.push({
-          url: result.secure_url,
-          public_id: result.public_id,
-        });
-      }
-    }
+  images = uploaded.map((r) => ({
+    url: r.secure_url,
+    public_id: r.public_id,
+  }));
+}
 
     await category.update({
       name: name ?? category.name,
