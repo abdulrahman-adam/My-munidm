@@ -659,7 +659,7 @@ const getProductByBarcode = async (barcode) => {
       `/api/products/barcode/${barcode}`
     );
 
-    return data; // ✅ return full object
+    return data.product; // ✅ IMPORTANT FIX
   } catch (error) {
     console.log(error);
 
