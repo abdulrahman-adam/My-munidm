@@ -53,19 +53,16 @@ const SearchProduct = () => {
         return;
       }
 
-      const response = await getProductByBarcode(code);
+    const response = await getProductByBarcode(code);
 
-      if (response?.success) {
-        setProduct(response.product);
-
-        speak(
-          `Product found. ${response.product.name}. Price ${response.product.price}`,
-        );
-      } else {
-        setProduct(null);
-        setError("Product not found");
-        speak("Product not found");
-      }
+if (response) {
+  setProduct(response);
+  speak(`Product found. ${response.name}. Price ${response.price}`);
+} else {
+  setProduct(null);
+  setError("Product not found");
+  speak("Product not found");
+}
     } catch (error) {
       console.log(error);
       setProduct(null);
