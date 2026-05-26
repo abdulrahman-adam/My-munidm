@@ -5,62 +5,126 @@ export default function Home() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-indigo-100 px-4">
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 px-4">
 
-      <div className="text-center space-y-8 max-w-2xl">
+      {/* 🌌 Animated background blobs */}
+      <motion.div
+        animate={{
+          x: [0, 40, 0],
+          y: [0, 30, 0],
+          scale: [1, 1.1, 1],
+        }}
+        transition={{
+          duration: 12,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+        className="absolute w-[520px] h-[520px] bg-indigo-600/25 rounded-full blur-[140px] top-[-120px] left-[-120px]"
+      />
 
-        {/* TITLE */}
+      <motion.div
+        animate={{
+          x: [0, -50, 0],
+          y: [0, -30, 0],
+          scale: [1, 1.15, 1],
+        }}
+        transition={{
+          duration: 15,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+        className="absolute w-[420px] h-[420px] bg-purple-600/25 rounded-full blur-[140px] bottom-[-120px] right-[-120px]"
+      />
+
+      {/* ✨ Main Card */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.85, y: 30 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className="relative z-10 text-center space-y-8 max-w-2xl p-10 backdrop-blur-3xl shadow-2xl"
+      >
+
+        {/* 🔥 Title */}
         <motion.h1
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -25 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-3xl sm:text-5xl font-extrabold text-gray-900"
+          transition={{ duration: 0.8, delay: 0.1 }}
+          className="text-4xl sm:text-6xl font-black text-white tracking-tight leading-tight"
         >
-          Welcome to <span className="text-indigo-600">MunIDM</span>
+          Welcome to{" "}
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-cyan-300 animate-pulse">
+            Fancymarcket
+          </span>
         </motion.h1>
 
-        {/* SUBTITLE */}
+        {/* 💡 Subtitle */}
         <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="text-gray-600 text-sm sm:text-lg"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.25 }}
+          className="text-gray-300 text-sm sm:text-lg leading-relaxed"
         >
-          Manage your products, inventory, and business in one powerful system.
+          Manage your products, inventory, sales, and business intelligence in one powerful,
+          modern POS system built for speed and control.
         </motion.p>
 
-        {/* LOGIN BUTTON */}
+        {/* 🚀 Button */}
         <motion.button
           whileHover={{
-            scale: 1.05,
-            boxShadow: "0px 10px 30px rgba(79, 70, 229, 0.4)",
+            scale: 1.1,
+            boxShadow: "0px 25px 70px rgba(99, 102, 241, 0.55)",
           }}
           whileTap={{ scale: 0.95 }}
           onClick={() => navigate("/login")}
-          className="relative inline-flex items-center justify-center px-8 py-3 overflow-hidden font-medium text-white bg-indigo-600 rounded-full group transition-all duration-300"
+          className="relative inline-flex items-center justify-center px-10 py-4 font-bold text-white rounded-2xl overflow-hidden"
         >
-          <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-indigo-500 to-indigo-700 group-hover:scale-110 transition-transform duration-500"></span>
+          {/* animated gradient background */}
+          <motion.span
+            animate={{
+              backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
+            }}
+            transition={{
+              duration: 6,
+              repeat: Infinity,
+              ease: "linear",
+            }}
+            className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500 bg-[length:200%_200%]"
+          />
 
-          <span className="relative flex items-center gap-2">
+          {/* glow layer */}
+          <span className="absolute inset-0 opacity-30 bg-white blur-2xl group-hover:opacity-60 transition" />
+
+          <span className="relative flex items-center gap-2 text-lg">
             Login
-            <svg
-              className="w-4 h-4 transition-transform group-hover:translate-x-1"
+            <motion.svg
+              animate={{ x: [0, 5, 0] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+              className="w-5 h-5"
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
               viewBox="0 0 24 24"
             >
               <path d="M9 5l7 7-7 7" />
-            </svg>
+            </motion.svg>
           </span>
         </motion.button>
 
-        {/* FOOTER TEXT */}
-        <p className="text-xs text-gray-400 pt-10">
-          Secure • Fast • Modern Inventory System
-        </p>
+        {/* 🧾 Footer */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+          className="pt-8 flex flex-col items-center gap-2"
+        >
+          <div className="h-[1px] w-24 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
 
-      </div>
+          <p className="text-xs text-gray-400 tracking-widest uppercase">
+            Secure • Fast • Modern Inventory System
+          </p>
+        </motion.div>
+
+      </motion.div>
     </div>
   );
 }

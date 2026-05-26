@@ -316,7 +316,7 @@ export default function Cashier() {
     ========================= */
     // backend should reduce stock automatically
 
-    speak("Cash payment successful");
+    // speak("Cash payment successful");
 
     playBeep();
 
