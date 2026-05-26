@@ -9,6 +9,8 @@ import {
   LayoutDashboard,
   Calculator,
   Shield,
+  PackageSearch,
+  Search,
 } from "lucide-react";
 
 import { useAppContext } from "../../context/AppContext";
@@ -109,7 +111,7 @@ export default function Navbar() {
               >
                 <div className="absolute -bottom-2 left-0 h-[2px] w-0 bg-cyan-600 transition-all duration-300 group-hover:w-full"></div>
 
-                <Calculator className="h-4 w-4 transition-transform duration-300 group-hover:rotate-12" />
+                <Search className="h-4 w-4 transition-transform duration-300 group-hover:rotate-12" />
 
                 Search Product
               </Link>
@@ -322,7 +324,7 @@ export default function Navbar() {
             className="group flex items-center gap-4 rounded-2xl px-4 py-4 text-gray-700 hover:bg-cyan-50 hover:text-cyan-600 transition-all duration-300 hover:translate-x-2"
           >
             <div className="h-12 w-12 rounded-xl bg-cyan-100 text-cyan-600 flex items-center justify-center group-hover:rotate-12 transition-all duration-300">
-              <Calculator className="h-5 w-5" />
+              <Search className="h-5 w-5" />
             </div>
 
             <div>

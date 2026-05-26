@@ -59,7 +59,7 @@ const SearchProduct = () => {
         setProduct(response.product);
 
         speak(
-          `Product found. ${response.product.name}. Price ${response.product.price}`
+          `Product found. ${response.product.name}. Price ${response.product.price}`,
         );
       } else {
         setProduct(null);
@@ -102,7 +102,7 @@ const SearchProduct = () => {
 
             handleSearch(decodedText);
           },
-          () => {}
+          () => {},
         );
       } catch (error) {
         console.log(error);
@@ -143,7 +143,7 @@ const SearchProduct = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-3 md:p-6">
+    <div className="w-full mx-0 min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-2 md:p-4">
       {/* HEADER */}
       <div className="max-w-7xl mx-auto">
         <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 md:p-10 shadow-2xl">
@@ -207,7 +207,6 @@ const SearchProduct = () => {
                   size={24}
                   className="group-hover:rotate-12 transition-all duration-300"
                 />
-
                 Camera
               </button>
             </div>
@@ -226,9 +225,7 @@ const SearchProduct = () => {
           <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
             <div className="w-full max-w-2xl rounded-3xl bg-slate-900 border border-slate-700 p-5 shadow-2xl">
               <div className="flex items-center justify-between mb-5">
-                <h2 className="text-white text-2xl font-bold">
-                  Scan Barcode
-                </h2>
+                <h2 className="text-white text-2xl font-bold">Scan Barcode</h2>
 
                 <button
                   onClick={stopScanner}
@@ -238,10 +235,7 @@ const SearchProduct = () => {
                 </button>
               </div>
 
-              <div
-                id="reader"
-                className="overflow-hidden rounded-2xl"
-              ></div>
+              <div id="reader" className="overflow-hidden rounded-2xl"></div>
             </div>
           </div>
         )}
@@ -273,13 +267,12 @@ const SearchProduct = () => {
                     <button
                       onClick={() =>
                         speak(
-                          `${product.name} price ${product.price} stock ${product.stock}`
+                          `${product.name} price ${product.price} stock ${product.stock}`,
                         )
                       }
                       className="h-14 px-6 rounded-2xl bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 hover:scale-105 transition-all duration-300 flex items-center gap-3"
                     >
                       <Volume2 size={22} />
-
                       Voice
                     </button>
                   </div>
@@ -294,7 +287,7 @@ const SearchProduct = () => {
                     <div className="relative overflow-hidden rounded-3xl border border-slate-700 bg-slate-900/70 h-[320px] md:h-[420px]">
                       <img
                         src={
-                          product.images?.[0] ||
+                          product.images?.[0]?.url ||
                           "https://placehold.co/600x600/png"
                         }
                         alt={product.name}
@@ -312,9 +305,7 @@ const SearchProduct = () => {
                       <div className="flex items-center gap-3 mb-4">
                         <DollarSign className="text-green-400" size={28} />
 
-                        <h3 className="text-white text-xl font-bold">
-                          Price
-                        </h3>
+                        <h3 className="text-white text-xl font-bold">Price</h3>
                       </div>
 
                       <p className="text-4xl font-black text-green-300">
@@ -342,9 +333,7 @@ const SearchProduct = () => {
                       <div className="flex items-center gap-3 mb-4">
                         <Boxes className="text-blue-400" size={28} />
 
-                        <h3 className="text-white text-xl font-bold">
-                          Stock
-                        </h3>
+                        <h3 className="text-white text-xl font-bold">Stock</h3>
                       </div>
 
                       <p className="text-4xl font-black text-blue-300">
@@ -356,20 +345,12 @@ const SearchProduct = () => {
                     <div className="rounded-3xl border border-purple-500/20 bg-purple-500/10 p-5 hover:-translate-y-1 transition-all duration-300">
                       <div className="flex items-center gap-3 mb-4">
                         {product.is_active ? (
-                          <BadgeCheck
-                            className="text-purple-400"
-                            size={28}
-                          />
+                          <BadgeCheck className="text-purple-400" size={28} />
                         ) : (
-                          <CircleOff
-                            className="text-red-400"
-                            size={28}
-                          />
+                          <CircleOff className="text-red-400" size={28} />
                         )}
 
-                        <h3 className="text-white text-xl font-bold">
-                          Status
-                        </h3>
+                        <h3 className="text-white text-xl font-bold">Status</h3>
                       </div>
 
                       <p className="text-2xl font-black text-purple-300">
@@ -405,7 +386,7 @@ const SearchProduct = () => {
                       <p className="text-2xl font-bold text-red-300">
                         {product.expiration_date
                           ? new Date(
-                              product.expiration_date
+                              product.expiration_date,
                             ).toLocaleDateString()
                           : "No Expiration"}
                       </p>
