@@ -60,51 +60,43 @@ export default function AdminPanel() {
   /* =========================================================
      LOAD ALL REAL DATABASE DATA
   ========================================================= */
-  // useEffect(() => {
-  //   const loadDashboard = async () => {
-  //     try {
-  //       setLoading(true);
+  useEffect(() => {
+    const loadDashboard = async () => {
+      try {
+        setLoading(true);
 
-  //       const [
-  //         productsData,
-  //         salesData,
-  //         usersData,
-  //         lowStockData,
-  //       ] = await Promise.all([
-  //         getProducts(),
-  //         getAllSales(),
-  //         getUsers(),
-  //         getLowStockProducts(),
-  //       ]);
+        const [
+          productsData,
+          salesData,
+          usersData,
+          lowStockData,
+        ] = await Promise.all([
+          getProducts(),
+          getAllSales(),
+          getUsers(),
+          getLowStockProducts(),
+        ]);
 
-  //       setProducts(productsData || []);
+        setProducts(productsData || []);
 
-  //       setUsers(usersData || []);
+        setUsers(usersData || []);
 
-  //       setLowStock(lowStockData || []);
+        setLowStock(lowStockData || []);
 
-  //       setRecentTransactions(
-  //         (salesData || []).slice(0, 8)
-  //       );
+        setRecentTransactions(
+          (salesData || []).slice(0, 8)
+        );
 
-  //     } catch (error) {
-  //       console.log("DASHBOARD_LOAD_ERROR:", error);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
+      } catch (error) {
+        console.log("DASHBOARD_LOAD_ERROR:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  //   loadDashboard();
-  // }, []);
+    loadDashboard();
+  }, []);
 
-useEffect(() => {
-  loadDashboard();
-}, [
-  getProducts,
-  getAllSales,
-  getUsers,
-  getLowStockProducts
-]);
   /* =========================================================
      CALCULATIONS
   ========================================================= */
