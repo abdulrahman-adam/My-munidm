@@ -51,9 +51,9 @@ export default function Home() {
           transition={{ duration: 0.8, delay: 0.1 }}
           className="text-4xl sm:text-6xl font-black text-white tracking-tight leading-tight"
         >
-          Welcome to{" "}
+          Bienvenue à{" "}
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-cyan-300 animate-pulse">
-            Fancymarcket
+            Fancymarket
           </span>
         </motion.h1>
 
@@ -64,8 +64,9 @@ export default function Home() {
           transition={{ duration: 0.8, delay: 0.25 }}
           className="text-gray-300 text-sm sm:text-lg leading-relaxed"
         >
-          Manage your products, inventory, sales, and business intelligence in one powerful,
-          modern POS system built for speed and control.
+         Gérez vos produits, vos stocks, vos ventes et vos données commerciales grâce à un système de point de vente puissant et
+
+moderne, conçu pour la rapidité et le contrôle.
         </motion.p>
 
         {/* 🚀 Button */}
@@ -95,7 +96,7 @@ export default function Home() {
           <span className="absolute inset-0 opacity-30 bg-white blur-2xl group-hover:opacity-60 transition" />
 
           <span className="relative flex items-center gap-2 text-lg">
-            Login
+            Se connecter
             <motion.svg
               animate={{ x: [0, 5, 0] }}
               transition={{ duration: 1.5, repeat: Infinity }}
@@ -120,7 +121,8 @@ export default function Home() {
           <div className="h-[1px] w-24 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
 
           <p className="text-xs text-gray-400 tracking-widest uppercase">
-            Secure • Fast • Modern Inventory System
+    
+            Système • d'inventaire sécurisé • rapide et moderne
           </p>
         </motion.div>
 
