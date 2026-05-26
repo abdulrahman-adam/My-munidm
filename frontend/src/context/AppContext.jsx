@@ -73,16 +73,39 @@ export const AppContextProvider = ({ children }) => {
   ========================================================= */
 
   // Replace your existing interceptor with this:
-axios.interceptors.request.use(
-  (config) => {
-    const currentToken = localStorage.getItem("token"); // Always fetch fresh from storage
-    if (currentToken) {
-      config.headers.Authorization = `Bearer ${currentToken}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+// axios.interceptors.request.use(
+//   (config) => {
+//     const currentToken = localStorage.getItem("token"); // Always fetch fresh from storage
+//     if (currentToken) {
+//       config.headers.Authorization = `Bearer ${currentToken}`;
+//     }
+//     return config;
+//   },
+//   (error) => Promise.reject(error)
+// );
+
+useEffect(() => {
+  const interceptor = axios.interceptors.request.use(
+    (config) => {
+      const currentToken =
+        localStorage.getItem("token");
+
+      if (currentToken) {
+        config.headers.Authorization =
+          `Bearer ${currentToken}`;
+      }
+
+      return config;
+    },
+    (error) => Promise.reject(error)
+  );
+
+  return () => {
+    axios.interceptors.request.eject(
+      interceptor
+    );
+  };
+}, []);
 
  /* =========================================================
    AUTO LOGIN ON REFRESH
@@ -207,6 +230,7 @@ const logout = () => {
   setToken(null);
   localStorage.removeItem("token");
   toast.success("Logged out");
+   navigate("/");
 };
 
   /* =========================================================
@@ -981,6 +1005,7 @@ const getReorderSuggestions = async () => {
       setLoading(true);
       const res = await axios.get("/api/sales/all");
       setSales(res.data.sales);
+    
       return res.data.sales;
     } catch (error) {
       console.log("GET SALES ERROR:", error.message);
@@ -1163,7 +1188,7 @@ const createReturn = async (data) => {
       for (const sale of offlineSales) {
 
         await axios.post(
-          "/api/sales",
+          "/api/sales/create",
           sale
         );
       }

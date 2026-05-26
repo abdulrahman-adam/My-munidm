@@ -1,5 +1,21 @@
-import { useEffect, useState } from "react";
-import { TrendingUp, Users, ShoppingBag, Clock } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  TrendingUp,
+  Users,
+  ShoppingBag,
+  Clock,
+  Package,
+  AlertTriangle,
+  Layers3,
+  DollarSign,
+  Wifi,
+  WifiOff,
+  Activity,
+  Receipt,
+} from "lucide-react";
+
+import { motion } from "framer-motion";
+
 import { useAppContext } from "../../context/AppContext";
 import Register from "../auth/Register";
 
@@ -10,194 +26,587 @@ export default function AdminPanel() {
     isManager,
     currency,
     offlineSales,
-    getDashboardStats,
-    getRecentSales,
+
+    // PRODUCTS
+    getProducts,
+
+    // SALES
+    sales,
+    getAllSales,
+
+    // USERS
+    getUsers,
+
+    // INVENTORY
+    getLowStockProducts,
+
+    // CATEGORY
+    categories,
+
   } = useAppContext();
 
   const [showRegister, setShowRegister] = useState(false);
 
-  const [statsData, setStatsData] = useState({
-    todaySales: 0,
-    totalOrders: 0,
-    activeCashiers: 0,
-  });
+  const [loading, setLoading] = useState(true);
 
-  const [transactions, setTransactions] = useState([]);
+  const [products, setProducts] = useState([]);
 
-  /* =========================
-     LOAD REAL DATA
-  ========================= */
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const stats = await getDashboardStats();
-        const sales = await getRecentSales();
+  const [users, setUsers] = useState([]);
 
-        setStatsData(stats);
-        setTransactions(sales || []);
-      } catch (err) {
-        console.log("Dashboard load error:", err);
-      }
-    };
+  const [lowStock, setLowStock] = useState([]);
 
-    load();
-  }, []);
+  const [recentTransactions, setRecentTransactions] = useState([]);
+
+  /* =========================================================
+     LOAD ALL REAL DATABASE DATA
+  ========================================================= */
+  // useEffect(() => {
+  //   const loadDashboard = async () => {
+  //     try {
+  //       setLoading(true);
+
+  //       const [
+  //         productsData,
+  //         salesData,
+  //         usersData,
+  //         lowStockData,
+  //       ] = await Promise.all([
+  //         getProducts(),
+  //         getAllSales(),
+  //         getUsers(),
+  //         getLowStockProducts(),
+  //       ]);
+
+  //       setProducts(productsData || []);
+
+  //       setUsers(usersData || []);
+
+  //       setLowStock(lowStockData || []);
+
+  //       setRecentTransactions(
+  //         (salesData || []).slice(0, 8)
+  //       );
+
+  //     } catch (error) {
+  //       console.log("DASHBOARD_LOAD_ERROR:", error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   loadDashboard();
+  // }, []);
+
+useEffect(() => {
+  loadDashboard();
+}, [
+  getProducts,
+  getAllSales,
+  getUsers,
+  getLowStockProducts
+]);
+  /* =========================================================
+     CALCULATIONS
+  ========================================================= */
+
+  const todaySales = useMemo(() => {
+    const today = new Date().toDateString();
+
+    return (sales || [])
+      .filter(
+        (sale) =>
+          new Date(sale.createdAt).toDateString() ===
+          today
+      )
+      .reduce(
+        (acc, sale) => acc + Number(sale.total || 0),
+        0
+      );
+  }, [sales]);
+
+  const totalOrders = sales?.length || 0;
+
+  const activeCashiers = users.filter(
+    (u) =>
+      u.role?.toUpperCase() === "CASHIER"
+  ).length;
+
+  const totalProducts = products.length;
+
+  const expiredProducts = products.filter(
+    (p) => p.is_expired
+  ).length;
+
+  const expiringSoon = products.filter(
+    (p) => p.is_expiring_soon
+  ).length;
+
+  const totalCategories = categories?.length || 0;
+
+  const totalStockValue = products.reduce(
+    (acc, p) =>
+      acc +
+      Number(p.price || 0) *
+        Number(p.stock || 0),
+    0
+  );
 
   const stats = [
     {
       label: "Today's Sales",
-      value: `${currency}${statsData.todaySales}`,
+      value: `${currency}${todaySales.toFixed(2)}`,
       icon: TrendingUp,
-      color: "bg-green-100 text-green-600",
+      color:
+        "from-green-500 to-emerald-500",
+      bg: "bg-green-500/10",
     },
+
     {
       label: "Total Orders",
-      value: statsData.totalOrders,
+      value: totalOrders,
       icon: ShoppingBag,
-      color: "bg-blue-100 text-blue-600",
+      color:
+        "from-indigo-500 to-blue-500",
+      bg: "bg-indigo-500/10",
     },
+
     {
-      label: "Pending Offline",
-      value: offlineSales.length.toString(),
-      icon: Clock,
-      color: "bg-amber-100 text-amber-600",
+      label: "Products",
+      value: totalProducts,
+      icon: Package,
+      color:
+        "from-cyan-500 to-sky-500",
+      bg: "bg-cyan-500/10",
     },
+
+    {
+      label: "Categories",
+      value: totalCategories,
+      icon: Layers3,
+      color:
+        "from-purple-500 to-fuchsia-500",
+      bg: "bg-purple-500/10",
+    },
+
+    {
+      label: "Low Stock",
+      value: lowStock.length,
+      icon: AlertTriangle,
+      color:
+        "from-orange-500 to-amber-500",
+      bg: "bg-orange-500/10",
+    },
+
     {
       label: "Active Cashiers",
-      value: statsData.activeCashiers,
+      value: activeCashiers,
       icon: Users,
-      color: "bg-purple-100 text-purple-600",
+      color:
+        "from-pink-500 to-rose-500",
+      bg: "bg-pink-500/10",
+    },
+
+    {
+      label: "Offline Sales",
+      value: offlineSales.length,
+      icon: Clock,
+      color:
+        "from-yellow-500 to-orange-500",
+      bg: "bg-yellow-500/10",
+    },
+
+    {
+      label: "Stock Value",
+      value: `${currency}${totalStockValue.toFixed(
+        2
+      )}`,
+      icon: DollarSign,
+      color:
+        "from-teal-500 to-green-500",
+      bg: "bg-teal-500/10",
     },
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
 
-      {/* HEADER */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Welcome back, {user?.name}! 👋
-          </h1>
-          <p className="text-gray-500">
-            Here's what's happening at your store today.
-          </p>
-        </div>
+      {/* =========================================================
+          HEADER
+      ========================================================= */}
+      <motion.div
+        initial={{
+          opacity: 0,
+          y: -20,
+        }}
+        animate={{
+          opacity: 1,
+          y: 0,
+        }}
+        className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 p-8 shadow-2xl"
+      >
+        {/* Glow Effects */}
+        <div className="absolute top-0 left-0 h-72 w-72 rounded-full bg-indigo-600/20 blur-[120px]" />
 
-        {isAdmin && (
-          <button
-            onClick={() => setShowRegister(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Create User
-          </button>
-        )}
-      </div>
+        <div className="absolute bottom-0 right-0 h-72 w-72 rounded-full bg-purple-600/20 blur-[120px]" />
 
-      {/* STATS */}
-      {(isAdmin || isManager) && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {stats.map((stat, idx) => (
-            <div
-              key={idx}
-              className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4"
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+
+          <div>
+            <motion.h1
+              initial={{
+                opacity: 0,
+                x: -20,
+              }}
+              animate={{
+                opacity: 1,
+                x: 0,
+              }}
+              className="text-3xl md:text-5xl font-black text-white"
             >
-              <div className={`p-4 rounded-full ${stat.color}`}>
-                <stat.icon className="h-6 w-6" />
-              </div>
+              Welcome back{" "}
+              <span className="bg-gradient-to-r from-cyan-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">
+                {user?.name}
+              </span>
+            </motion.h1>
 
-              <div>
-                <p className="text-sm font-medium text-gray-500">
-                  {stat.label}
-                </p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {stat.value}
-                </p>
+            <p className="mt-4 text-slate-300 text-sm md:text-base max-w-2xl">
+              Real-time analytics, sales monitoring,
+              inventory management, and cashier activity
+              from your smart POS ecosystem.
+            </p>
+          </div>
+
+          {isAdmin && (
+            <motion.button
+              whileHover={{
+                scale: 1.05,
+              }}
+              whileTap={{
+                scale: 0.95,
+              }}
+              onClick={() =>
+                setShowRegister(true)
+              }
+              className="group relative overflow-hidden rounded-2xl px-6 py-4 font-bold text-white shadow-2xl"
+            >
+              <span className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500 transition-all duration-700 group-hover:scale-110" />
+
+              <span className="relative z-10">
+                + Create User
+              </span>
+            </motion.button>
+          )}
+        </div>
+      </motion.div>
+
+      {/* =========================================================
+          STATS
+      ========================================================= */}
+      {(isAdmin || isManager) && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+
+          {stats.map((stat, index) => (
+            <motion.div
+              key={index}
+              initial={{
+                opacity: 0,
+                y: 30,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+              transition={{
+                delay: index * 0.08,
+              }}
+              whileHover={{
+                y: -8,
+                scale: 1.02,
+              }}
+              className="group relative overflow-hidden rounded-3xl border border-white/10 bg-white/70 backdrop-blur-2xl p-6 shadow-xl"
+            >
+              {/* animated glow */}
+              <div
+                className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-700 bg-gradient-to-br ${stat.color}`}
+              />
+
+              <div className="relative z-10 flex items-center justify-between">
+
+                <div>
+                  <p className="text-sm font-semibold text-gray-500">
+                    {stat.label}
+                  </p>
+
+                  <h3 className="mt-2 text-3xl font-black text-gray-900">
+                    {stat.value}
+                  </h3>
+                </div>
+
+                <div
+                  className={`p-4 rounded-2xl ${stat.bg}`}
+                >
+                  <stat.icon className="h-7 w-7 text-gray-800" />
+                </div>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       )}
 
-      {/* MAIN CONTENT */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* =========================================================
+          MAIN CONTENT
+      ========================================================= */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
-        {/* TRANSACTIONS (NOW REAL DATA) */}
-        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h3 className="text-lg font-bold text-gray-800 mb-4">
-            Recent Transactions
-          </h3>
-
-          {transactions.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-48 text-gray-400">
-              <ShoppingBag className="h-10 w-10 mb-2 opacity-30" />
-              <p>No transactions yet</p>
+        {/* =========================================================
+            RECENT SALES
+        ========================================================= */}
+        <motion.div
+          initial={{
+            opacity: 0,
+            y: 30,
+          }}
+          animate={{
+            opacity: 1,
+            y: 0,
+          }}
+          className="xl:col-span-2 rounded-3xl border border-white/10 bg-white/70 backdrop-blur-2xl p-6 shadow-xl"
+        >
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-3 rounded-2xl bg-indigo-500/10">
+              <Receipt className="h-6 w-6 text-indigo-600" />
             </div>
-          ) : (
-            <div className="space-y-3">
-              {transactions.map((t) => (
+
+            <div>
+              <h2 className="text-2xl font-black text-gray-900">
+                Recent Transactions
+              </h2>
+
+              <p className="text-sm text-gray-500">
+                Latest sales from database
+              </p>
+            </div>
+          </div>
+
+          {loading ? (
+            <div className="space-y-4">
+              {[1, 2, 3, 4].map((i) => (
                 <div
-                  key={t.id}
-                  className="flex justify-between border-b pb-2 text-sm"
-                >
-                  <span>{t.invoice_number || "SALE"}</span>
-                  <span className="font-bold text-gray-700">
-                    {currency}{t.total}
-                  </span>
-                </div>
+                  key={i}
+                  className="h-16 rounded-2xl animate-pulse bg-gray-200"
+                />
               ))}
             </div>
+          ) : recentTransactions.length ===
+            0 ? (
+            <div className="flex flex-col items-center justify-center h-72 text-gray-400">
+              <ShoppingBag className="h-16 w-16 opacity-20" />
+
+              <p className="mt-4 text-lg">
+                No sales yet
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {recentTransactions.map(
+                (sale, index) => (
+                  <motion.div
+                    key={sale.id}
+                    initial={{
+                      opacity: 0,
+                      x: -20,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      x: 0,
+                    }}
+                    transition={{
+                      delay: index * 0.05,
+                    }}
+                    whileHover={{
+                      scale: 1.01,
+                    }}
+                    className="flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-2xl border border-gray-100 bg-white p-5 transition-all duration-300 hover:shadow-lg"
+                  >
+                    <div>
+                      <h4 className="font-black text-gray-900">
+                        {sale.invoice_number ||
+                          "SALE"}
+                      </h4>
+
+                      <p className="text-sm text-gray-500">
+                        {new Date(
+                          sale.createdAt
+                        ).toLocaleString()}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+
+                      <span className="rounded-xl bg-green-100 px-4 py-2 font-bold text-green-700">
+                        {currency}
+                        {sale.total}
+                      </span>
+
+                      <span className="rounded-xl bg-indigo-100 px-4 py-2 text-sm font-bold text-indigo-700">
+                        {sale.payment_method}
+                      </span>
+                    </div>
+                  </motion.div>
+                )
+              )}
+            </div>
           )}
-        </div>
+        </motion.div>
 
-        {/* SYSTEM STATUS */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h3 className="text-lg font-bold text-gray-800 mb-4">
-            System Status
-          </h3>
+        {/* =========================================================
+            SYSTEM STATUS
+        ========================================================= */}
+        <motion.div
+          initial={{
+            opacity: 0,
+            y: 30,
+          }}
+          animate={{
+            opacity: 1,
+            y: 0,
+          }}
+          transition={{
+            delay: 0.1,
+          }}
+          className="rounded-3xl border border-white/10 bg-white/70 backdrop-blur-2xl p-6 shadow-xl"
+        >
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-3 rounded-2xl bg-green-500/10">
+              <Activity className="h-6 w-6 text-green-600" />
+            </div>
 
-          <div className="space-y-4">
+            <div>
+              <h2 className="text-2xl font-black text-gray-900">
+                System Status
+              </h2>
 
-            <div className="flex justify-between items-center pb-3 border-b border-gray-100">
-              <span className="text-gray-600">Network</span>
-              <span className="flex items-center gap-2 text-sm font-medium text-green-600 bg-green-50 px-2 py-1 rounded">
-                <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                Online
+              <p className="text-sm text-gray-500">
+                Live application status
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-5">
+
+            {/* NETWORK */}
+            <div className="flex items-center justify-between rounded-2xl bg-slate-50 p-4">
+              <div className="flex items-center gap-3">
+                {navigator.onLine ? (
+                  <Wifi className="text-green-600" />
+                ) : (
+                  <WifiOff className="text-red-600" />
+                )}
+
+                <span className="font-semibold text-gray-700">
+                  Network
+                </span>
+              </div>
+
+              <span
+                className={`px-3 py-1 rounded-xl text-sm font-bold ${
+                  navigator.onLine
+                    ? "bg-green-100 text-green-700"
+                    : "bg-red-100 text-red-700"
+                }`}
+              >
+                {navigator.onLine
+                  ? "ONLINE"
+                  : "OFFLINE"}
               </span>
             </div>
 
-            <div className="flex justify-between items-center pb-3 border-b border-gray-100">
-              <span className="text-gray-600">Offline Cache</span>
-              <span className="text-sm font-medium text-gray-800">
-                {offlineSales.length} items
+            {/* ROLE */}
+            <div className="flex items-center justify-between rounded-2xl bg-slate-50 p-4">
+              <span className="font-semibold text-gray-700">
+                Current Role
               </span>
-            </div>
 
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Current Role</span>
-              <span className="text-sm font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded">
+              <span className="px-3 py-1 rounded-xl bg-indigo-100 text-indigo-700 text-sm font-bold">
                 {user?.role}
               </span>
             </div>
 
+            {/* EXPIRED */}
+            <div className="flex items-center justify-between rounded-2xl bg-slate-50 p-4">
+              <span className="font-semibold text-gray-700">
+                Expired Products
+              </span>
+
+              <span className="px-3 py-1 rounded-xl bg-red-100 text-red-700 text-sm font-bold">
+                {expiredProducts}
+              </span>
+            </div>
+
+            {/* EXPIRING SOON */}
+            <div className="flex items-center justify-between rounded-2xl bg-slate-50 p-4">
+              <span className="font-semibold text-gray-700">
+                Expiring Soon
+              </span>
+
+              <span className="px-3 py-1 rounded-xl bg-orange-100 text-orange-700 text-sm font-bold">
+                {expiringSoon}
+              </span>
+            </div>
+
+            {/* LOW STOCK */}
+            <div className="flex items-center justify-between rounded-2xl bg-slate-50 p-4">
+              <span className="font-semibold text-gray-700">
+                Low Stock Alerts
+              </span>
+
+              <span className="px-3 py-1 rounded-xl bg-yellow-100 text-yellow-700 text-sm font-bold">
+                {lowStock.length}
+              </span>
+            </div>
+
           </div>
-        </div>
+        </motion.div>
       </div>
 
-      {/* REGISTER MODAL */}
+      {/* =========================================================
+          REGISTER MODAL
+      ========================================================= */}
       {showRegister && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-xl w-full max-w-md relative">
+        <motion.div
+          initial={{
+            opacity: 0,
+          }}
+          animate={{
+            opacity: 1,
+          }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4"
+        >
+          <motion.div
+            initial={{
+              scale: 0.8,
+              opacity: 0,
+              y: 40,
+            }}
+            animate={{
+              scale: 1,
+              opacity: 1,
+              y: 0,
+            }}
+            className="relative w-full max-w-2xl overflow-hidden rounded-3xl border border-white/10 bg-white p-8 shadow-2xl"
+          >
             <button
-              onClick={() => setShowRegister(false)}
-              className="absolute top-2 right-2 text-gray-500 hover:text-black"
+              onClick={() =>
+                setShowRegister(false)
+              }
+              className="absolute right-5 top-5 rounded-xl bg-red-100 px-3 py-2 text-sm font-bold text-red-600 transition hover:bg-red-200"
             >
-              ✕ create user account
+              ✕ Close
             </button>
 
             <Register />
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
     </div>
   );
