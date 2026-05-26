@@ -6,7 +6,7 @@ import axios from "axios";
 export const sendWhatsAppAlert = async (message) => {
   try {
     await axios.get(
-      `https://api.callmebot.com/whatsapp.php?phone=0651490377&text=${encodeURIComponent(
+      `https://api.callmebot.com/whatsapp.php?phone=33651490377&text=${encodeURIComponent(
         message
       )}&apikey=YOUR_API_KEY`
     );

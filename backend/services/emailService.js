@@ -19,7 +19,7 @@ export const sendEmail = async (to, subject, text) => {
     from: `"POS System" <${process.env.EMAIL_USER}>`,
     to,
     subject,
-    text,
+    html: text, // 🔥 change THIS
   });
 };
 

@@ -162,7 +162,7 @@ const register = async (data) => {
       headers: { Authorization: `Bearer ${token}` }
     });
     toast.success("User created successfully!");
-    navigate("/admin");
+    navigate("/admin-dashboard");
   } catch (error) {
     toast.error(error.response?.data?.message || "Register failed");
   }

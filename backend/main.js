@@ -6,6 +6,8 @@ import dotenv from "dotenv";
 import connectDB, { sequelize } from "./configs/db.js";
 import connectCloudinary from "./configs/cloudinary.js";
 
+// 
+import "./cron/productExpirationCron.js";
 // Routes
 import userRouter from "./routes/userRoute.js";
 import authRouter from "./routes/authRoute.js";
