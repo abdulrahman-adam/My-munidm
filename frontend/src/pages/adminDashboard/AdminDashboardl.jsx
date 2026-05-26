@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Users,
   Settings,
@@ -10,7 +10,7 @@ import {
 
 import Register from "../auth/Register";
 import UserManagement from "../../components/admin/UserManagement";
-import CategoryManagement from "../../components/admin/CategoryManagement"; // ✅ ADD THIS
+import CategoryManagement from "../../components/admin/CategoryManagement";
 import ProductManagement from "../../components/admin/ProductManagement";
 import InventoryDashboard from "../../components/inventory/InventoryDashboard";
 import ReportsDashboard from "../../components/reports/ReportsDashboard";
@@ -18,6 +18,38 @@ import ReportsDashboard from "../../components/reports/ReportsDashboard";
 export default function AdminDashboard() {
   const [showRegister, setShowRegister] = useState(false);
   const [activeSection, setActiveSection] = useState("");
+
+  // ✅ ADD REF FOR SCROLL
+  const sectionRef = useRef(null);
+
+  // ✅ AUTO SCROLL WHEN SECTION CHANGES
+  useEffect(() => {
+    if (activeSection && sectionRef.current) {
+      setTimeout(() => {
+        sectionRef.current.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 100);
+    }
+  }, [activeSection]);
+
+  const renderSection = () => {
+    switch (activeSection) {
+      case "users":
+        return <UserManagement />;
+      case "categories":
+        return <CategoryManagement />;
+      case "products":
+        return <ProductManagement />;
+      case "reports":
+        return <ReportsDashboard />;
+      case "database":
+        return <InventoryDashboard />;
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -90,15 +122,14 @@ export default function AdminDashboard() {
             className={`
               bg-white p-6 rounded-xl shadow-sm border cursor-pointer
               transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group
-
-              ${
-                activeSection === card.section
-                  ? "border-blue-500 ring-2 ring-blue-100"
-                  : "border-gray-100"
-              }
+              ${activeSection === card.section
+                ? "border-blue-500 ring-2 ring-blue-100"
+                : "border-gray-100"}
             `}
           >
-            <card.icon className={`h-8 w-8 ${card.color} mb-4 group-hover:scale-110 transition-transform`} />
+            <card.icon
+              className={`h-8 w-8 ${card.color} mb-4 group-hover:scale-110 transition-transform`}
+            />
 
             <h3 className="text-lg font-bold text-gray-800">
               {card.title}
@@ -111,24 +142,28 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      {/* ================= ACTIVE SECTIONS ================= */}
+      {/* ================= ACTIVE SECTION ================= */}
+      {activeSection && (
+        <div
+          ref={sectionRef}
+          className="relative bg-white rounded-xl border shadow-sm p-4 md:p-6 transition-all duration-500"
+        >
+          {/* BACK BUTTON */}
+          <button
+            onClick={() => setActiveSection("")}
+            className="mb-4 px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition"
+          >
+            ← Back
+          </button>
 
-      {activeSection === "users" && <UserManagement />}
-
-      {activeSection === "categories" && (
-        <CategoryManagement />   // ✅ REAL COMPONENT HERE
+          {/* SECTION CONTENT */}
+          <div className="animate-[fadeIn_0.4s_ease]">
+            {renderSection()}
+          </div>
+        </div>
       )}
 
-      {activeSection === "products" && (
-  <ProductManagement />
-)}
-
-     {activeSection === "reports" && (
-  <ReportsDashboard />
-)}
-
-     {activeSection === "database" && <InventoryDashboard />}
-
+      {/* DEFAULT VIEW */}
       {activeSection === "" && (
         <div className="bg-white p-6 rounded-xl border shadow-sm">
           <h2 className="text-lg font-bold mb-4">Live System Insights</h2>
@@ -138,7 +173,7 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* ================= REGISTER MODAL ================= */}
+      {/* REGISTER MODAL */}
       {showRegister && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm py-6">
 
@@ -169,6 +204,16 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+
+      {/* ANIMATION */}
+      <style>
+        {`
+          @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+        `}
+      </style>
 
     </div>
   );
