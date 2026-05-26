@@ -397,6 +397,12 @@ export default function ProductManagement() {
   /* =========================
      UI
   ========================= */
+
+  const getCategoryName = (category_id) => {
+  return categories?.find((c) => c.id === category_id)?.name || "Unknown";
+};
+
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 p-3 sm:p-5 space-y-6">
 
@@ -475,6 +481,9 @@ export default function ProductManagement() {
                   <h3 className="font-black text-lg text-slate-800">
                     {p.name}
                   </h3>
+<p className="text-sm text-gray-500 mt-1">
+  Catégorie: {getCategoryName(p.category_id)}
+</p>
 
                   <p className="text-sm text-gray-500 mt-1">
                     Barcode: {p.barcode || "N/A"}
