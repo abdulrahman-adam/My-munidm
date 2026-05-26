@@ -12,14 +12,16 @@ import ProtectedRoute from "./components/protectedRoute/ProtectedRoute";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import ForgotPassword from "./pages/auth/ForgotPassword";
-import Dashboard from "./pages/dashboard/Dashboard";
 import POS from "./pages/pos/POS";
-import AdminPanel from "./pages/adminPanel/AdminPanel";
 import Home from "./pages/home/Home";
 
 // IMPORTANT: Outlet fix
 import { Outlet } from "react-router-dom";
 import CashierDashboard from "./pages/cashier/CashierDashboard";
+import LayoutDashboard from "./pages/layoutDashboard/LayoutDashboard";
+import AdminPanel from "./pages/adminPanel/AdminPanel";
+import AdminDashboard from "./pages/adminDashboard/AdminDashboardl";
+import SearchProduct from "./pages/searchProduct/SearchProduct";
 
 /* =========================
    LAYOUT (FIXED)
@@ -71,13 +73,15 @@ export default function App() {
 
           {/* DASHBOARD (ADMIN ONLY OR AUTH MANAGER) */}
           <Route
-            path="/admin"
+            path="/admin-panel"
             element={
               <ProtectedRoute allowedRoles={["ADMIN", "MANAGER"]}>
-                <Dashboard />
+                <AdminPanel />
               </ProtectedRoute>
             }
           />
+
+        
 
           {/* POS SYSTEM */}
           <Route
@@ -89,12 +93,22 @@ export default function App() {
             }
           />
 
+             {/* POS SYSTEM */}
+          <Route
+            path="/search-product"
+            element={
+              <ProtectedRoute allowedRoles={["CASHIER", "MANAGER", "ADMIN"]}>
+                <SearchProduct />
+              </ProtectedRoute>
+            }
+          />
+
           {/* ADMIN PANEL */}
           <Route
             path="/admin-dashboard"
             element={
               <ProtectedRoute allowedRoles={["ADMIN"]}>
-                <AdminPanel />
+                <AdminDashboard />
               </ProtectedRoute>
             }
           />

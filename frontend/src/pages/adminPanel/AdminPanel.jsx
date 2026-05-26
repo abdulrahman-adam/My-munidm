@@ -1,175 +1,204 @@
-import { useState } from "react";
-import {
-  Users,
-  Settings,
-  Database,
-  TrendingUp,
-  Package,
-  Tags,
-} from "lucide-react";
-
+import { useEffect, useState } from "react";
+import { TrendingUp, Users, ShoppingBag, Clock } from "lucide-react";
+import { useAppContext } from "../../context/AppContext";
 import Register from "../auth/Register";
-import UserManagement from "../../components/admin/UserManagement";
-import CategoryManagement from "../../components/admin/CategoryManagement"; // ✅ ADD THIS
-import ProductManagement from "../../components/admin/ProductManagement";
-import InventoryDashboard from "../../components/inventory/InventoryDashboard";
-import ReportsDashboard from "../../components/reports/ReportsDashboard";
 
 export default function AdminPanel() {
+  const {
+    user,
+    isAdmin,
+    isManager,
+    currency,
+    offlineSales,
+    getDashboardStats,
+    getRecentSales,
+  } = useAppContext();
+
   const [showRegister, setShowRegister] = useState(false);
-  const [activeSection, setActiveSection] = useState("");
+
+  const [statsData, setStatsData] = useState({
+    todaySales: 0,
+    totalOrders: 0,
+    activeCashiers: 0,
+  });
+
+  const [transactions, setTransactions] = useState([]);
+
+  /* =========================
+     LOAD REAL DATA
+  ========================= */
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const stats = await getDashboardStats();
+        const sales = await getRecentSales();
+
+        setStatsData(stats);
+        setTransactions(sales || []);
+      } catch (err) {
+        console.log("Dashboard load error:", err);
+      }
+    };
+
+    load();
+  }, []);
+
+  const stats = [
+    {
+      label: "Today's Sales",
+      value: `${currency}${statsData.todaySales}`,
+      icon: TrendingUp,
+      color: "bg-green-100 text-green-600",
+    },
+    {
+      label: "Total Orders",
+      value: statsData.totalOrders,
+      icon: ShoppingBag,
+      color: "bg-blue-100 text-blue-600",
+    },
+    {
+      label: "Pending Offline",
+      value: offlineSales.length.toString(),
+      icon: Clock,
+      color: "bg-amber-100 text-amber-600",
+    },
+    {
+      label: "Active Cashiers",
+      value: statsData.activeCashiers,
+      icon: Users,
+      color: "bg-purple-100 text-purple-600",
+    },
+  ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
 
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-            <Settings className="h-7 w-7 text-blue-600 animate-pulse" />
-            System Administration
+          <h1 className="text-2xl font-bold text-gray-900">
+            Welcome back, {user?.name}! 👋
           </h1>
-
-          <p className="text-gray-500 mt-1">
-            Manage users, products, categories and system settings.
+          <p className="text-gray-500">
+            Here's what's happening at your store today.
           </p>
         </div>
 
-        <button
-          onClick={() => setShowRegister(true)}
-          className="px-5 py-2.5 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition-all duration-300 hover:scale-105"
-        >
-          + Create User
-        </button>
-      </div>
-
-      {/* ================= CARDS ================= */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-
-        {[
-          {
-            title: "User Management",
-            desc: "Add, edit or remove users",
-            icon: Users,
-            color: "text-blue-600",
-            section: "users",
-          },
-          {
-            title: "Category Management",
-            desc: "Manage product categories",
-            icon: Tags,
-            color: "text-orange-600",
-            section: "categories",
-          },
-          {
-            title: "Product Management",
-            desc: "Add and manage products",
-            icon: Package,
-            color: "text-indigo-600",
-            section: "products",
-          },
-          {
-            title: "Reports",
-            desc: "Sales & financial analytics",
-            icon: TrendingUp,
-            color: "text-green-600",
-            section: "reports",
-          },
-          {
-            title: "Database",
-            desc: "Sync system data",
-            icon: Database,
-            color: "text-purple-600",
-            section: "database",
-          },
-        ].map((card, i) => (
-          <div
-            key={i}
-            onClick={() => setActiveSection(card.section)}
-            className={`
-              bg-white p-6 rounded-xl shadow-sm border cursor-pointer
-              transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group
-
-              ${
-                activeSection === card.section
-                  ? "border-blue-500 ring-2 ring-blue-100"
-                  : "border-gray-100"
-              }
-            `}
+        {isAdmin && (
+          <button
+            onClick={() => setShowRegister(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
-            <card.icon className={`h-8 w-8 ${card.color} mb-4 group-hover:scale-110 transition-transform`} />
-
-            <h3 className="text-lg font-bold text-gray-800">
-              {card.title}
-            </h3>
-
-            <p className="text-gray-500 text-sm mt-1">
-              {card.desc}
-            </p>
-          </div>
-        ))}
+            Create User
+          </button>
+        )}
       </div>
 
-      {/* ================= ACTIVE SECTIONS ================= */}
-
-      {activeSection === "users" && <UserManagement />}
-
-      {activeSection === "categories" && (
-        <CategoryManagement />   // ✅ REAL COMPONENT HERE
-      )}
-
-      {activeSection === "products" && (
-  <ProductManagement />
-)}
-
-     {activeSection === "reports" && (
-  <ReportsDashboard />
-)}
-
-     {activeSection === "database" && <InventoryDashboard />}
-
-      {activeSection === "" && (
-        <div className="bg-white p-6 rounded-xl border shadow-sm">
-          <h2 className="text-lg font-bold mb-4">Live System Insights</h2>
-          <p className="text-gray-400">
-            📊 Select a module to manage system data
-          </p>
-        </div>
-      )}
-
-      {/* ================= REGISTER MODAL ================= */}
-      {showRegister && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm py-6">
-
-          <div className="relative w-full max-w-lg bg-white shadow-2xl border overflow-hidden">
-
-            <div className="flex items-center justify-between border-b px-6 py-5">
-
-              <div>
-                <h2 className="text-xl font-bold">Create New User</h2>
-                <p className="text-sm text-gray-500">
-                  Create cashier, manager, or admin account
-                </p>
+      {/* STATS */}
+      {(isAdmin || isManager) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {stats.map((stat, idx) => (
+            <div
+              key={idx}
+              className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4"
+            >
+              <div className={`p-4 rounded-full ${stat.color}`}>
+                <stat.icon className="h-6 w-6" />
               </div>
 
-              <button
-                onClick={() => setShowRegister(false)}
-                className="w-10 h-10 rounded-full bg-gray-100 hover:bg-red-100"
-              >
-                ✕
-              </button>
+              <div>
+                <p className="text-sm font-medium text-gray-500">
+                  {stat.label}
+                </p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {stat.value}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
+      {/* MAIN CONTENT */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        {/* TRANSACTIONS (NOW REAL DATA) */}
+        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h3 className="text-lg font-bold text-gray-800 mb-4">
+            Recent Transactions
+          </h3>
+
+          {transactions.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-48 text-gray-400">
+              <ShoppingBag className="h-10 w-10 mb-2 opacity-30" />
+              <p>No transactions yet</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {transactions.map((t) => (
+                <div
+                  key={t.id}
+                  className="flex justify-between border-b pb-2 text-sm"
+                >
+                  <span>{t.invoice_number || "SALE"}</span>
+                  <span className="font-bold text-gray-700">
+                    {currency}{t.total}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* SYSTEM STATUS */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h3 className="text-lg font-bold text-gray-800 mb-4">
+            System Status
+          </h3>
+
+          <div className="space-y-4">
+
+            <div className="flex justify-between items-center pb-3 border-b border-gray-100">
+              <span className="text-gray-600">Network</span>
+              <span className="flex items-center gap-2 text-sm font-medium text-green-600 bg-green-50 px-2 py-1 rounded">
+                <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                Online
+              </span>
             </div>
 
-            <div className="max-h-[85vh] overflow-y-auto">
-              <Register />
+            <div className="flex justify-between items-center pb-3 border-b border-gray-100">
+              <span className="text-gray-600">Offline Cache</span>
+              <span className="text-sm font-medium text-gray-800">
+                {offlineSales.length} items
+              </span>
+            </div>
+
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Current Role</span>
+              <span className="text-sm font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                {user?.role}
+              </span>
             </div>
 
           </div>
         </div>
-      )}
+      </div>
 
+      {/* REGISTER MODAL */}
+      {showRegister && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-xl w-full max-w-md relative">
+            <button
+              onClick={() => setShowRegister(false)}
+              className="absolute top-2 right-2 text-gray-500 hover:text-black"
+            >
+              ✕ create user account
+            </button>
+
+            <Register />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
