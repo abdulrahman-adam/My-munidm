@@ -145,13 +145,21 @@ export const createProduct = async (req, res) => {
 /* =========================
   GET PRODUCT BY BARCODE
 ========================= */
+
+
 export const getByBarcode = async (req, res) => {
   try {
-
     const { barcode } = req.params;
 
     const product = await Product.findOne({
-      where: { barcode },
+      where: { barcode: barcode.trim() },
+
+      include: [
+        {
+          model: Category,
+          as: "category",
+        },
+      ],
     });
 
     if (!product) {
@@ -165,9 +173,7 @@ export const getByBarcode = async (req, res) => {
       success: true,
       product,
     });
-
   } catch (error) {
-
     console.log(error);
 
     return res.status(500).json({
