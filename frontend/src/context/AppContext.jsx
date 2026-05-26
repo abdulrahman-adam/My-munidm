@@ -55,6 +55,9 @@ export const AppContextProvider = ({ children }) => {
   ========================================================= */
 
   const [inventoryLogs, setInventoryLogs] = useState([]);
+/* =========================================================
+    SALES STATES
+  ========================================================= */
   const [sales, setSales] = useState([]);
 
   const [cart, setCart] = useState(
@@ -956,17 +959,95 @@ const getReorderSuggestions = async () => {
 };
 
 // CREATE SALE (CASHIER CHECKOUT)
-const createSale = async (data) => {
-  try {
-    const res = await axios.post("/api/sales/create", data);
+ /* =========================
+     CREATE SALE
+  ========================= */
+  const createSale = async (data) => {
+    try {
+      const res = await axios.post("/api/sales/create", data);
+      setSales((prev) => [res.data.sale, ...prev]);
+      return res.data;
+    } catch (error) {
+      console.log("CREATE SALE ERROR:", error.message);
+    }
+  };
 
-    toast.success(res.data.message || "Sale completed");
 
-    return res.data.sale;
-  } catch (error) {
-    toast.error(error.response?.data?.message || "Sale failed");
-  }
-};
+    /* =========================
+     GET ALL SALES
+  ========================= */
+  const getAllSales = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get("/api/sales/all");
+      setSales(res.data.sales);
+      return res.data.sales;
+    } catch (error) {
+      console.log("GET SALES ERROR:", error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+ /* =========================
+     FILTER SALES
+  ========================= */
+  const filterSales = async (filters) => {
+    try {
+      const res = await axios.get("/api/sales/filter", {
+        params: filters,
+      });
+      setSales(res.data.sales);
+      return res.data.sales;
+    } catch (error) {
+      console.log("FILTER SALES ERROR:", error.message);
+    }
+  };
+
+ /* =========================
+     GET SALE BY ID
+  ========================= */
+  const getSaleById = async (id) => {
+    try {
+      const res = await axios.get(`/api/sales/${id}`);
+      return res.data.sale;
+    } catch (error) {
+      console.log("GET SALE ERROR:", error.message);
+    }
+  };
+
+
+    /* =========================
+     UPDATE SALE STATUS
+  ========================= */
+  const updateSaleStatus = async (id, status) => {
+    try {
+      const res = await axios.put(`/api/sales/${id}/status`, {
+        status,
+      });
+
+      setSales((prev) =>
+        prev.map((s) => (s.id === id ? res.data.sale : s))
+      );
+
+      return res.data;
+    } catch (error) {
+      console.log("UPDATE STATUS ERROR:", error.message);
+    }
+  };
+
+    /* =========================
+     DELETE SALE
+  ========================= */
+  const deleteSale = async (id) => {
+    try {
+      await axios.delete(`/api/sales/${id}`);
+      setSales((prev) => prev.filter((s) => s.id !== id));
+    } catch (error) {
+      console.log("DELETE SALE ERROR:", error.message);
+    }
+  };
 
 // CREATE RETURN
 const createReturn = async (data) => {
@@ -1179,6 +1260,14 @@ const createReturn = async (data) => {
       deleteProduct,
       getProductByBarcode,
 
+       /* SALES FUNCTIONS */
+        sales,
+        createSale,
+        getAllSales,
+        filterSales,
+        getSaleById,
+        updateSaleStatus,
+        deleteSale,
 
       /* INVENTORY */
         addStock,

@@ -90,6 +90,7 @@ app.use("/api/products", productRouter);
 app.use("/api/returns", returnRouter);
 app.use("/api/sales", saleRouter);
 app.use("/api/inventory", inventoryRouter);
+app.use("/api/sales", saleRouter);
 
 /* -------------------- HEALTH CHECK -------------------- */
 app.get("/", (req, res) => {

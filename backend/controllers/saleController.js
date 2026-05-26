@@ -1,153 +1,203 @@
 import Sale from "../models/Sale.js";
-import SaleItem from "../models/SaleItem.js";
-import Product from "../models/Product.js";
-import sequelize from "../configs/db.js";
+import { Op } from "sequelize";
 
-/* =========================================================
-   CREATE SALE (MAIN CASHIER ACTION)
-========================================================= */
+/* =========================
+   CREATE SALE
+========================= */
 export const createSale = async (req, res) => {
-  const transaction = await sequelize.transaction();
-
   try {
     const {
       user_id,
       cashier_name,
-      payment_method,
       invoice_number,
-      items,
+      total,
+      payment_method,
+      payment_reference,
+      shift_id,
+      offline_synced,
     } = req.body;
 
-    if (!items || items.length === 0) {
-      await transaction.rollback();
-
+    if (!user_id || !invoice_number || !total) {
       return res.status(400).json({
         success: false,
-        message: "No items in sale",
+        message: "Missing required fields",
       });
     }
 
-    let total = 0;
-
-    /* =========================================================
-       CHECK STOCK + CALCULATE TOTAL
-    ========================================================= */
-    for (const item of items) {
-      const product = await Product.findByPk(
-        item.product_id,
-        { transaction }
-      );
-
-      if (!product) {
-        await transaction.rollback();
-
-        return res.status(404).json({
-          success: false,
-          message: "Product not found",
-        });
-      }
-
-      if (product.stock < item.quantity) {
-        await transaction.rollback();
-
-        return res.status(400).json({
-          success: false,
-          message: `Not enough stock for ${product.name}`,
-        });
-      }
-
-      total +=
-        Number(product.price) * item.quantity;
-    }
-
-    /* =========================================================
-       CREATE SALE
-    ========================================================= */
-    const sale = await Sale.create(
-      {
-        user_id,
-        cashier_name,
-        invoice_number,
-        total,
-        payment_method,
-        status: "COMPLETED",
-      },
-      { transaction }
-    );
-
-    /* =========================================================
-       CREATE SALE ITEMS + REDUCE STOCK
-    ========================================================= */
-    for (const item of items) {
-      const product = await Product.findByPk(
-        item.product_id,
-        { transaction }
-      );
-
-      /* =========================
-         CREATE SALE ITEM
-      ========================= */
-      await SaleItem.create(
-        {
-          sale_id: sale.id,
-          product_id: product.id,
-          quantity: item.quantity,
-          price: product.price,
-          subtotal:
-            Number(product.price) *
-            item.quantity,
-        },
-        { transaction }
-      );
-
-      /* =========================
-         REDUCE STOCK
-      ========================= */
-      product.stock =
-        product.stock - item.quantity;
-
-      await product.save({ transaction });
-
-      /* =========================
-         BARCODE HISTORY
-      ========================= */
-      await BarcodeHistory.create(
-        {
-          sale_id: sale.id,
-          product_id: product.id,
-          barcode: product.barcode,
-          cashier_id: user_id,
-          cashier_name,
-          quantity: item.quantity,
-        },
-        { transaction }
-      );
-    }
-
-    /* =========================================================
-       DAILY SALES LOG
-    ========================================================= */
-    await DailySale.create(
-      {
-        sale_id: sale.id,
-        total,
-        payment_method,
-        cashier_id: user_id,
-      },
-      { transaction }
-    );
-
-    await transaction.commit();
+    const sale = await Sale.create({
+      user_id,
+      cashier_name,
+      invoice_number,
+      total,
+      payment_method,
+      payment_reference,
+      shift_id,
+      offline_synced: offline_synced ?? true,
+      status: "COMPLETED",
+    });
 
     return res.status(201).json({
       success: true,
-      message: "Sale completed successfully",
+      message: "Sale created successfully",
       sale,
     });
-
   } catch (error) {
-    await transaction.rollback();
+    console.log(error);
 
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/* =========================
+   GET ALL SALES
+========================= */
+export const getAllSales = async (req, res) => {
+  try {
+    const sales = await Sale.findAll({
+      order: [["createdAt", "DESC"]],
+    });
+
+    return res.status(200).json({
+      success: true,
+      count: sales.length,
+      sales,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/* =========================
+   GET SALE BY ID
+========================= */
+export const getSaleById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const sale = await Sale.findByPk(id);
+
+    if (!sale) {
+      return res.status(404).json({
+        success: false,
+        message: "Sale not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      sale,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/* =========================
+   FILTER SALES
+========================= */
+export const filterSales = async (req, res) => {
+  try {
+    const { startDate, endDate, cashier_id, status } = req.query;
+
+    let where = {};
+
+    if (startDate && endDate) {
+      where.createdAt = {
+        [Op.between]: [new Date(startDate), new Date(endDate)],
+      };
+    }
+
+    if (cashier_id) {
+      where.user_id = cashier_id;
+    }
+
+    if (status) {
+      where.status = status;
+    }
+
+    const sales = await Sale.findAll({
+      where,
+      order: [["createdAt", "DESC"]],
+    });
+
+    return res.status(200).json({
+      success: true,
+      count: sales.length,
+      sales,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/* =========================
+   UPDATE SALE STATUS
+========================= */
+export const updateSaleStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const sale = await Sale.findByPk(id);
+
+    if (!sale) {
+      return res.status(404).json({
+        success: false,
+        message: "Sale not found",
+      });
+    }
+
+    sale.status = status;
+    await sale.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Sale status updated",
+      sale,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/* =========================
+   DELETE SALE (ADMIN ONLY)
+========================= */
+export const deleteSale = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const sale = await Sale.findByPk(id);
+
+    if (!sale) {
+      return res.status(404).json({
+        success: false,
+        message: "Sale not found",
+      });
+    }
+
+    await sale.destroy();
+
+    return res.status(200).json({
+      success: true,
+      message: "Sale deleted successfully",
+    });
+  } catch (error) {
     return res.status(500).json({
       success: false,
       message: error.message,
