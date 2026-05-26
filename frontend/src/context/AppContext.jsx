@@ -656,17 +656,15 @@ const getProductByBarcode = async (barcode) => {
       `/api/products/barcode/${barcode}`
     );
 
-    return data.product;
-
+    return data; // ✅ return full object
   } catch (error) {
     console.log(error);
 
     toast.error(
-      error.response?.data?.message ||
-      "Product not found"
+      error.response?.data?.message || "Product not found"
     );
 
-    return null;
+    return { success: false };
   }
 };
 
