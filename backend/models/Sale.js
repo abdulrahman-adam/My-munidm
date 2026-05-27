@@ -1,8 +1,6 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../configs/db.js";
 
-
-
 const Sale = sequelize.define(
   "Sale",
   {
@@ -34,11 +32,7 @@ const Sale = sequelize.define(
     },
 
     payment_method: {
-      type: DataTypes.ENUM(
-        "CASH",
-        "CARD",
-        "MOBILE"
-      ),
+      type: DataTypes.ENUM("CASH", "CARD", "MOBILE"),
       defaultValue: "CASH",
     },
 
@@ -48,11 +42,7 @@ const Sale = sequelize.define(
     },
 
     status: {
-      type: DataTypes.ENUM(
-        "COMPLETED",
-        "CANCELLED",
-        "PENDING"
-      ),
+      type: DataTypes.ENUM("COMPLETED", "CANCELLED", "PENDING"),
       defaultValue: "COMPLETED",
     },
 
@@ -73,9 +63,13 @@ const Sale = sequelize.define(
 );
 
 /* =========================
-   SALE ITEM RELATION
+   ASSOCIATIONS (IMPORTANT)
 ========================= */
-
-
+Sale.associate = (models) => {
+  Sale.hasMany(models.SaleItem, {
+    foreignKey: "sale_id",
+    as: "items",
+  });
+};
 
 export default Sale;

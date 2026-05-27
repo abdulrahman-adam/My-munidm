@@ -1,9 +1,6 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../configs/db.js";
 
-import Sale from "./Sale.js";
-
-
 const SaleItem = sequelize.define(
   "SaleItem",
   {
@@ -45,18 +42,21 @@ const SaleItem = sequelize.define(
 );
 
 /* =========================
-   SALE RELATION
+   ASSOCIATIONS
 ========================= */
 
-SaleItem.belongsTo(Sale, {
-  foreignKey: "sale_id",
-  as: "sale",
-});
+SaleItem.associate = (models) => {
+  // SaleItem → Sale
+  SaleItem.belongsTo(models.Sale, {
+    foreignKey: "sale_id",
+    as: "sale",
+  });
 
-/* =========================
-   PRODUCT RELATION
-========================= */
-
-
+  // SaleItem → Product  ⭐ FIX ADDED HERE
+  SaleItem.belongsTo(models.Product, {
+    foreignKey: "product_id",
+    as: "product",
+  });
+};
 
 export default SaleItem;

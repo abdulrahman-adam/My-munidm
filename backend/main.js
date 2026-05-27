@@ -17,9 +17,12 @@ import returnRouter from "./routes/returnRoutes.js";
 import saleRouter from "./routes/saleRoute.js";
 import inventoryRouter from "./routes/inventoryRoute.js";
 import reportRouter from "./routes/reportRoute.js";
+import models from "./models/index.js";
+
+
+// await sequelize.sync();
 
 dotenv.config();
-
 const app = express();
 const port = process.env.PORT || 5000;
 

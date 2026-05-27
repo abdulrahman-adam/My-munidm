@@ -33,12 +33,12 @@ export const generateDailyReport = async (
       include: [
         {
           model: SaleItem,
-          as: "SaleItems",
+          as: "items",
 
           include: [
             {
               model: Product,
-              as: "Product",
+              as: "product",
             },
           ],
         },
