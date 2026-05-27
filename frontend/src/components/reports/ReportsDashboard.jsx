@@ -3,7 +3,7 @@ import { TrendingDown, Package, BarChart3 } from "lucide-react";
 import { useAppContext } from "../../context/AppContext";
 
 export default function ReportsDashboard() {
-  const { getSalesAnalytics, getLowStockProducts, getReorderSuggestions } =
+  const { getSalesAnalytics, getLowStockProducts, getReorderSuggestions, downloadReport } =
     useAppContext();
 
 
@@ -28,41 +28,6 @@ const [reorder, setReorder] = useState([]);
 
   load();
 }, []);
-
-
-const downloadReport = async () => {
-  try {
-    const response = await axios.get(
-      "/api/reports/daily-report",
-      {
-        responseType: "blob",
-      }
-    );
-
-    const fileURL = window.URL.createObjectURL(
-      response.data
-    );
-
-    const link = document.createElement("a");
-
-    link.href = fileURL;
-    link.download = "daily-report.pdf";
-
-    document.body.appendChild(link);
-
-    link.click();
-
-    link.remove();
-
-    window.URL.revokeObjectURL(fileURL);
-
-  } catch (error) {
-    console.error(
-      "Download report error:",
-      error
-    );
-  }
-};
 
   return (
     <div className="p-4 md:p-6 space-y-6">

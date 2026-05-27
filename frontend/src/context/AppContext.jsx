@@ -1290,7 +1290,7 @@ const createReturn = async (data) => {
      REPORTS
   ========================================================= */
 
-  const downloadReport = async () => {
+const downloadReport = async () => {
   try {
     const res = await axios.get(
       "/api/reports/daily-report",
@@ -1299,26 +1299,20 @@ const createReturn = async (data) => {
       }
     );
 
-    const url = window.URL.createObjectURL(
-      new Blob([res.data])
-    );
+    const fileURL = window.URL.createObjectURL(res.data);
 
     const link = document.createElement("a");
-
-    link.href = url;
-    link.setAttribute(
-      "download",
-      "daily-report.pdf"
-    );
+    link.href = fileURL;
+    link.download = "daily-report.pdf";
 
     document.body.appendChild(link);
-
     link.click();
 
     link.remove();
+    window.URL.revokeObjectURL(fileURL);
 
   } catch (error) {
-    console.log(error);
+    console.log("Download report error:", error);
   }
 };
 
