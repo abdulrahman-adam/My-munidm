@@ -13,12 +13,16 @@ export default function ReportsDashboard() {
   const [analytics, setAnalytics] = useState({ daily: [] });
   const [lowStock, setLowStock] = useState([]);
   const [reorder, setReorder] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   /* =========================
-     FORMAT DATE (ADDED)
+     FORMAT DATE
   ========================= */
-  const formatDate = (date) =>
-    new Date(date).toLocaleString("fr-FR", {
+
+  const formatDate = (date) => {
+    if (!date) return "No date";
+
+    return new Date(date).toLocaleString("fr-FR", {
       timeZone: "Europe/Paris",
       year: "numeric",
       month: "2-digit",
@@ -26,19 +30,30 @@ export default function ReportsDashboard() {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  /* =========================
+     LOAD DATA
+  ========================= */
 
   useEffect(() => {
     const load = async () => {
       try {
-        const a = await getSalesAnalytics();
-        const l = await getLowStockProducts();
-        const r = await getReorderSuggestions();
+        setLoading(true);
+
+        const [a, l, r] = await Promise.all([
+          getSalesAnalytics(),
+          getLowStockProducts(),
+          getReorderSuggestions(),
+        ]);
 
         setAnalytics(a || { daily: [] });
         setLowStock(l || []);
         setReorder(r || []);
       } catch (err) {
         console.error("ReportsDashboard error:", err);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -46,72 +61,105 @@ export default function ReportsDashboard() {
   }, []);
 
   return (
-    <div className="p-4 md:p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-6 bg-gray-50 min-h-screen">
       {/* HEADER */}
-      <h2 className="text-2xl font-bold flex items-center gap-2">
-        <BarChart3 /> Sales Intelligence Dashboard
-      </h2>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <h2 className="text-2xl font-bold flex items-center gap-2">
+          <BarChart3 /> Sales Intelligence Dashboard
+        </h2>
 
-      {/* LOW STOCK */}
-      <div className="bg-white p-4 rounded-xl border">
-        <h3 className="font-bold flex items-center gap-2 text-red-600">
-          <TrendingDown /> Low Stock Alerts
-        </h3>
-
-        <div className="mt-3 grid md:grid-cols-3 gap-3">
-          {lowStock.map((p) => (
-            <div key={p.id} className="p-3 border rounded-lg bg-red-50">
-              <p className="font-bold">{p.name}</p>
-              <p>Stock: {p.stock}</p>
-            </div>
-          ))}
-        </div>
+        <button
+          onClick={downloadReport}
+          className="bg-black text-white px-4 py-2 rounded-lg hover:opacity-90 transition"
+        >
+          Download Daily PDF Report
+        </button>
       </div>
 
-      {/* REORDER */}
-      <div className="bg-white p-4 rounded-xl border">
-        <h3 className="font-bold flex items-center gap-2 text-blue-600">
-          <Package /> Auto Reorder Suggestions
-        </h3>
-
-        <div className="mt-3 grid md:grid-cols-3 gap-3">
-          {reorder.map((p) => (
-            <div key={p.product_id} className="p-3 border rounded-lg">
-              <p className="font-bold">{p.name}</p>
-              <p>Stock: {p.stock}</p>
-              <p className="text-green-600">
-                Suggested: {p.suggested_order}
-              </p>
-            </div>
-          ))}
+      {/* LOADING */}
+      {loading && (
+        <div className="text-center text-gray-500">
+          Loading dashboard data...
         </div>
-      </div>
+      )}
 
-      {/* ANALYTICS */}
-      <div className="bg-white p-4 rounded-xl border">
-        <h3 className="font-bold">Daily Sales</h3>
+      {/* GRID CONTAINER */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        <div className="space-y-2 mt-3">
-          {analytics?.daily?.map((d, i) => (
-            <div
-              key={i}
-              className="flex justify-between border-b py-1"
-            >
-              <span>
-                {d.date ? formatDate(d.date) : "No date"}
-              </span>
-              <span>{d.total} €</span>
-            </div>
-          ))}
+        {/* =========================
+            LOW STOCK
+        ========================= */}
+        <div className="bg-white p-4 rounded-xl border shadow-sm">
+          <h3 className="font-bold flex items-center gap-2 text-red-600 mb-3">
+            <TrendingDown /> Low Stock Alerts
+          </h3>
+
+          <div className="space-y-3">
+            {lowStock.length === 0 ? (
+              <p className="text-gray-500 text-sm">No low stock products</p>
+            ) : (
+              lowStock.map((p) => (
+                <div
+                  key={p.id}
+                  className="p-3 border rounded-lg bg-red-50"
+                >
+                  <p className="font-semibold">{p.name}</p>
+                  <p className="text-sm">Stock: {p.stock}</p>
+                </div>
+              ))
+            )}
+          </div>
         </div>
 
-        <div className="space-y-2 mt-3">
-          <button
-            onClick={downloadReport}
-            className="bg-black text-white px-4 py-2 rounded-lg cursor-pointer"
-          >
-            Download Daily PDF Report
-          </button>
+        {/* =========================
+            REORDER
+        ========================= */}
+        <div className="bg-white p-4 rounded-xl border shadow-sm">
+          <h3 className="font-bold flex items-center gap-2 text-blue-600 mb-3">
+            <Package /> Auto Reorder Suggestions
+          </h3>
+
+          <div className="space-y-3">
+            {reorder.length === 0 ? (
+              <p className="text-gray-500 text-sm">No reorder suggestions</p>
+            ) : (
+              reorder.map((p) => (
+                <div
+                  key={p.product_id}
+                  className="p-3 border rounded-lg"
+                >
+                  <p className="font-semibold">{p.name}</p>
+                  <p className="text-sm">Stock: {p.stock}</p>
+                  <p className="text-green-600 text-sm">
+                    Suggested: {p.suggested_order}
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* =========================
+            DAILY SALES
+        ========================= */}
+        <div className="bg-white p-4 rounded-xl border shadow-sm">
+          <h3 className="font-bold mb-3">Daily Sales</h3>
+
+          <div className="space-y-2 max-h-[300px] overflow-auto">
+            {analytics?.daily?.length === 0 ? (
+              <p className="text-gray-500 text-sm">No sales today</p>
+            ) : (
+              analytics.daily.map((d, i) => (
+                <div
+                  key={i}
+                  className="flex justify-between border-b py-1 text-sm"
+                >
+                  <span>{formatDate(d.date)}</span>
+                  <span className="font-medium">{d.total} €</span>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </div>
     </div>

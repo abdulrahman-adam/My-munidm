@@ -1292,27 +1292,52 @@ const createReturn = async (data) => {
 
 const downloadReport = async () => {
   try {
-    const res = await axios.get(
+    /* =========================
+       REQUEST PDF FROM API
+    ========================= */
+
+    const response = await axios.get(
       "/api/reports/daily-report",
       {
         responseType: "blob",
       }
     );
 
-    const fileURL = window.URL.createObjectURL(res.data);
+    /* =========================
+       CREATE BLOB URL
+    ========================= */
+
+    const blob = new Blob([response.data], {
+      type: "application/pdf",
+    });
+
+    const fileURL = window.URL.createObjectURL(blob);
+
+    /* =========================
+       DOWNLOAD FILE
+    ========================= */
 
     const link = document.createElement("a");
     link.href = fileURL;
-    link.download = "daily-report.pdf";
+    link.setAttribute("download", "daily-report.pdf");
 
     document.body.appendChild(link);
     link.click();
+
+    /* =========================
+       CLEANUP
+    ========================= */
 
     link.remove();
     window.URL.revokeObjectURL(fileURL);
 
   } catch (error) {
-    console.log("Download report error:", error);
+    console.error("❌ Download report failed:", error);
+
+    // Optional: better UX
+    if (error.response) {
+      console.error("Server error:", error.response.data);
+    }
   }
 };
 

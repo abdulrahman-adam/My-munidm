@@ -8,7 +8,7 @@ import Product from "../models/Product.js";
 export const generateDailyReport = async (req, res) => {
   try {
     /* =========================
-       TODAY RANGE
+       DATE RANGE
     ========================= */
 
     const startOfDay = new Date();
@@ -18,7 +18,7 @@ export const generateDailyReport = async (req, res) => {
     endOfDay.setHours(23, 59, 59, 999);
 
     /* =========================
-       GET SALES (USING sale_date)
+       FETCH SALES
     ========================= */
 
     const sales = await Sale.findAll({
@@ -45,7 +45,7 @@ export const generateDailyReport = async (req, res) => {
     });
 
     /* =========================
-       PDF DOCUMENT
+       PDF SETUP
     ========================= */
 
     const doc = new PDFDocument({ margin: 40 });
@@ -59,72 +59,96 @@ export const generateDailyReport = async (req, res) => {
     doc.pipe(res);
 
     /* =========================
-       TITLE
+       HEADER
     ========================= */
 
-    doc.fontSize(20).text("DAILY SALES REPORT", {
-      align: "center",
-    });
+    doc
+      .fontSize(20)
+      .text("DAILY SALES REPORT", { align: "center" });
 
     doc.moveDown(2);
 
     let totalRevenue = 0;
+    let totalSales = sales.length;
+    let totalItems = 0;
 
     /* =========================
        SALES LOOP
     ========================= */
 
-    sales.forEach((sale) => {
-      doc.fontSize(12).text(`Invoice: ${sale.invoice_number}`);
+    sales.forEach((sale, index) => {
+      const saleDate = new Date(sale.sale_date);
+
+      const formattedDate = saleDate.toLocaleString("fr-FR", {
+        timeZone: "Europe/Paris",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      doc.fontSize(12).text(`Sale #${index + 1}`);
+      doc.text(`Invoice: ${sale.invoice_number}`);
       doc.text(`Payment: ${sale.payment_method}`);
+      doc.text(`Date & Time: ${formattedDate}`);
 
-      doc.text(
-        `Date: ${new Date(sale.sale_date).toLocaleString("fr-FR", {
-          timeZone: "Europe/Paris",
-        })}`
-      );
-
-      doc.moveDown(0.5);
-
-      doc.text("-----------------------------------");
-
-      /* =========================
-         ITEMS
-      ========================= */
+      doc.text("----------------------------------------");
 
       const items = sale.items || [];
 
-      if (items.length > 0) {
+      if (items.length === 0) {
+        doc.text("No items found");
+      } else {
         items.forEach((item) => {
-          const productName = item.product?.name || "Unknown Product";
+          const productName =
+            item.product?.name || "Unknown Product";
+
           const quantity = Number(item.quantity) || 0;
           const price = Number(item.price) || 0;
           const subtotal = Number(item.subtotal) || 0;
 
-          doc.text(
-            `${productName} | ${quantity} x ${price} € = ${subtotal} €`
-          );
-
+          totalItems += quantity;
           totalRevenue += subtotal;
+
+          doc.text(
+            `${productName} | ${quantity} x ${price.toFixed(
+              2
+            )} € = ${subtotal.toFixed(2)} €`
+          );
         });
-      } else {
-        doc.text("No items found");
       }
 
+      doc.moveDown();
+      doc.text("========================================");
       doc.moveDown();
     });
 
     /* =========================
-       TOTAL
+       SUMMARY SECTION
     ========================= */
 
     doc.moveDown();
 
+    doc.fontSize(14).text("SUMMARY", { underline: true });
+
+    doc.moveDown(0.5);
+
+    doc.fontSize(12).text(`Total Sales: ${totalSales}`);
+    doc.text(`Total Items Sold: ${totalItems}`);
+    doc.text(`Total Revenue: ${totalRevenue.toFixed(2)} €`);
+
+    doc.moveDown();
+
     doc
-      .fontSize(14)
-      .text(`TOTAL REVENUE: ${totalRevenue.toFixed(2)} €`, {
+      .fontSize(16)
+      .text(`NET TOTAL: ${totalRevenue.toFixed(2)} €`, {
         align: "right",
       });
+
+    /* =========================
+       END PDF
+    ========================= */
 
     doc.end();
   } catch (error) {
