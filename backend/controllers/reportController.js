@@ -23,27 +23,22 @@ export const generateDailyReport = async (req, res) => {
        FETCH SALES
     ========================= */
     const sales = await Sale.findAll({
-      where: {
-        sale_date: {
-          [Op.between]: [startOfDay, endOfDay],
-        },
-      },
+  where: {
+    createdAt: {
+      [Op.between]: [startOfDay, endOfDay],
+    },
+  },
+  include: [
+    {
+      model: SaleItem,
+      as: "items",
+      include: [{ model: Product, as: "product" }],
+    },
+  ],
+  order: [["createdAt", "DESC"]],
+});
 
-      include: [
-        {
-          model: SaleItem,
-          as: "items",
-          include: [
-            {
-              model: Product,
-              as: "product",
-            },
-          ],
-        },
-      ],
-
-      order: [["sale_date", "DESC"]],
-    });
+    console.log("ALL SALES:", sales.length);
 
     console.log("SALES FOUND:", sales.length);
 
