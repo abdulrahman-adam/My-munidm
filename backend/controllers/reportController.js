@@ -8,19 +8,20 @@ import Product from "../models/Product.js";
 export const generateDailyReport = async (req, res) => {
   try {
     /* =========================
-       DATE RANGE
+       DATE RANGE (LOCAL SAFE)
     ========================= */
-
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
 
     const endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
 
+    console.log("START:", startOfDay);
+    console.log("END:", endOfDay);
+
     /* =========================
        FETCH SALES
     ========================= */
-
     const sales = await Sale.findAll({
       where: {
         sale_date: {
@@ -44,10 +45,11 @@ export const generateDailyReport = async (req, res) => {
       order: [["sale_date", "DESC"]],
     });
 
-    /* =========================
-       PDF SETUP
-    ========================= */
+    console.log("SALES FOUND:", sales.length);
 
+    /* =========================
+       PDF INIT
+    ========================= */
     const doc = new PDFDocument({ margin: 40 });
 
     res.setHeader("Content-Type", "application/pdf");
@@ -61,25 +63,25 @@ export const generateDailyReport = async (req, res) => {
     /* =========================
        HEADER
     ========================= */
-
-    doc
-      .fontSize(20)
-      .text("DAILY SALES REPORT", { align: "center" });
+    doc.fontSize(20).text("DAILY SALES REPORT", {
+      align: "center",
+    });
 
     doc.moveDown(2);
 
+    /* =========================
+       TOTALS
+    ========================= */
     let totalRevenue = 0;
-    let totalSales = sales.length;
-    let totalItems = 0;
+    let totalItemsSold = 0;
 
     /* =========================
        SALES LOOP
     ========================= */
-
     sales.forEach((sale, index) => {
-      const saleDate = new Date(sale.sale_date);
+      const saleDate = sale.sale_date || sale.createdAt;
 
-      const formattedDate = saleDate.toLocaleString("fr-FR", {
+      const formattedDate = new Date(saleDate).toLocaleString("fr-FR", {
         timeZone: "Europe/Paris",
         year: "numeric",
         month: "2-digit",
@@ -97,18 +99,16 @@ export const generateDailyReport = async (req, res) => {
 
       const items = sale.items || [];
 
-      if (items.length === 0) {
+      if (!items.length) {
         doc.text("No items found");
       } else {
         items.forEach((item) => {
-          const productName =
-            item.product?.name || "Unknown Product";
-
+          const productName = item.product?.name || "Unknown Product";
           const quantity = Number(item.quantity) || 0;
           const price = Number(item.price) || 0;
           const subtotal = Number(item.subtotal) || 0;
 
-          totalItems += quantity;
+          totalItemsSold += quantity;
           totalRevenue += subtotal;
 
           doc.text(
@@ -125,31 +125,25 @@ export const generateDailyReport = async (req, res) => {
     });
 
     /* =========================
-       SUMMARY SECTION
+       SUMMARY
     ========================= */
+    doc.fontSize(14).text("SUMMARY", { underline: true });
 
     doc.moveDown();
 
-    doc.fontSize(14).text("SUMMARY", { underline: true });
-
-    doc.moveDown(0.5);
-
-    doc.fontSize(12).text(`Total Sales: ${totalSales}`);
-    doc.text(`Total Items Sold: ${totalItems}`);
+    doc.fontSize(12).text(`Total Sales: ${sales.length}`);
+    doc.text(`Total Items Sold: ${totalItemsSold}`);
     doc.text(`Total Revenue: ${totalRevenue.toFixed(2)} €`);
 
     doc.moveDown();
 
-    doc
-      .fontSize(16)
-      .text(`NET TOTAL: ${totalRevenue.toFixed(2)} €`, {
-        align: "right",
-      });
+    doc.fontSize(16).text(`NET TOTAL: ${totalRevenue.toFixed(2)} €`, {
+      align: "right",
+    });
 
     /* =========================
        END PDF
     ========================= */
-
     doc.end();
   } catch (error) {
     console.error("DAILY REPORT ERROR:", error);
