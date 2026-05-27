@@ -16,6 +16,7 @@ import productRouter from "./routes/productRoute.js";
 import returnRouter from "./routes/returnRoutes.js";
 import saleRouter from "./routes/saleRoute.js";
 import inventoryRouter from "./routes/inventoryRoute.js";
+import reportRouter from "./routes/reportRoute.js";
 
 dotenv.config();
 
@@ -91,6 +92,7 @@ app.use("/api/returns", returnRouter);
 app.use("/api/sales", saleRouter);
 app.use("/api/inventory", inventoryRouter);
 app.use("/api/sales", saleRouter);
+app.use("/api/reports", reportRouter);
 
 /* -------------------- HEALTH CHECK -------------------- */
 app.get("/", (req, res) => {

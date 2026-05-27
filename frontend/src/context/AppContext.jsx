@@ -1285,6 +1285,43 @@ const createReturn = async (data) => {
     }
   };
 
+
+   /* =========================================================
+     REPORTS
+  ========================================================= */
+
+  const downloadReport = async () => {
+  try {
+    const res = await axios.get(
+      "/api/reports/daily-report",
+      {
+        responseType: "blob",
+      }
+    );
+
+    const url = window.URL.createObjectURL(
+      new Blob([res.data])
+    );
+
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.setAttribute(
+      "download",
+      "daily-report.pdf"
+    );
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    link.remove();
+
+  } catch (error) {
+    console.log(error);
+  }
+};
+
   /* =========================================================
      AUTO SYNC WHEN INTERNET RETURNS
   ========================================================= */
@@ -1395,6 +1432,9 @@ const createReturn = async (data) => {
     offlineSales,
     saveOfflineSale,
     syncOfflineSales,
+
+    // report
+    downloadReport
   };
 
   return (

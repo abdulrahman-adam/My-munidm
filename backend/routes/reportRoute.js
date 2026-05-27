@@ -1,41 +1,36 @@
 import express from "express";
 
-import {
-  getDailySalesReport,
-  getTopProducts,
-  getLowStockProducts,
-  getRevenueReport,
-  generateDailyReport,
-} from "../controllers/reportController.js";
+import { protect } from "../middleware/authMiddleware.js";
+import { authorizeRoles } from "../middleware/roleMiddleware.js";
+import { generateDailyReport } from "../controllers/reportController.js";
 
-import { protect } from "../middlewares/authMiddleware.js";
-import { authorizeRoles } from "../middlewares/roleMiddleware.js";
+
 
 const reportRouter = express.Router();
 
 // ✅ Daily sales
-reportRouter.get(
-  "/daily-sales",
-  protect,
-  authorizeRoles("MANAGER", "ADMIN"),
-  getDailySalesReport
-);
+// reportRouter.get(
+//   "/daily-sales",
+//   protect,
+//   authorizeRoles("MANAGER", "ADMIN"),
+//   getDailySalesReport
+// );
 
 // ✅ Top selling products
-reportRouter.get(
-  "/top-products",
-  protect,
-  authorizeRoles("MANAGER", "ADMIN"),
-  getTopProducts
-);
+// reportRouter.get(
+//   "/top-products",
+//   protect,
+//   authorizeRoles("MANAGER", "ADMIN"),
+//   getTopProducts
+// );
 
 // ✅ Low stock
-reportRouter.get(
-  "/low-stock",
-  protect,
-  authorizeRoles("MANAGER", "ADMIN"),
-  getLowStockProducts
-);
+// reportRouter.get(
+//   "/low-stock",
+//   protect,
+//   authorizeRoles("MANAGER", "ADMIN"),
+//   getLowStockProducts
+// );
 
 
 

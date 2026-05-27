@@ -56,7 +56,7 @@ const [loading, setLoading] = useState(true);
      LOAD ALL REAL DATABASE DATA
   ========================================================= */
 useEffect(() => {
-  // getProducts();
+  getProducts();
   // getUsers();
   // getAllSales();
   getLowStockProducts();
