@@ -18,7 +18,6 @@ const Sale = sequelize.define(
     cashier_name: {
       type: DataTypes.STRING,
       allowNull: true,
-      trim: true,
     },
 
     invoice_number: {
@@ -67,22 +66,17 @@ const Sale = sequelize.define(
   {
     tableName: "sales",
     timestamps: true,
-    createdAt: "createdAt",
-    updatedAt: "updatedAt",
   }
 );
 
 /* =========================
-   ASSOCIATIONS
-   (ONLY KEEP HERE)
+   ASSOCIATIONS (ONLY HERE)
 ========================= */
-
 Sale.associate = (models) => {
   Sale.hasMany(models.SaleItem, {
     foreignKey: "sale_id",
     as: "items",
     onDelete: "CASCADE",
-    hooks: true,
   });
 };
 

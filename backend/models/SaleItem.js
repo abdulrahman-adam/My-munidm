@@ -42,17 +42,14 @@ const SaleItem = sequelize.define(
 );
 
 /* =========================
-   ASSOCIATIONS
+   ASSOCIATIONS (ONLY HERE)
 ========================= */
-
 SaleItem.associate = (models) => {
-  // SaleItem → Sale
   SaleItem.belongsTo(models.Sale, {
     foreignKey: "sale_id",
     as: "sale",
   });
 
-  // SaleItem → Product  ⭐ FIX ADDED HERE
   SaleItem.belongsTo(models.Product, {
     foreignKey: "product_id",
     as: "product",
