@@ -3,31 +3,47 @@ import { TrendingDown, Package, BarChart3 } from "lucide-react";
 import { useAppContext } from "../../context/AppContext";
 
 export default function ReportsDashboard() {
-  const { getSalesAnalytics, getLowStockProducts, getReorderSuggestions, downloadReport } =
-    useAppContext();
-
+  const {
+    getSalesAnalytics,
+    getLowStockProducts,
+    getReorderSuggestions,
+    downloadReport,
+  } = useAppContext();
 
   const [analytics, setAnalytics] = useState({ daily: [] });
-const [lowStock, setLowStock] = useState([]);
-const [reorder, setReorder] = useState([]);
+  const [lowStock, setLowStock] = useState([]);
+  const [reorder, setReorder] = useState([]);
 
- useEffect(() => {
-  const load = async () => {
-    try {
-      const a = await getSalesAnalytics();
-      const l = await getLowStockProducts();
-      const r = await getReorderSuggestions();
+  /* =========================
+     FORMAT DATE (ADDED)
+  ========================= */
+  const formatDate = (date) =>
+    new Date(date).toLocaleString("fr-FR", {
+      timeZone: "Europe/Paris",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
 
-      setAnalytics(a || { daily: [] });
-      setLowStock(l || []);
-      setReorder(r || []);
-    } catch (err) {
-      console.error("ReportsDashboard error:", err);
-    }
-  };
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const a = await getSalesAnalytics();
+        const l = await getLowStockProducts();
+        const r = await getReorderSuggestions();
 
-  load();
-}, []);
+        setAnalytics(a || { daily: [] });
+        setLowStock(l || []);
+        setReorder(r || []);
+      } catch (err) {
+        console.error("ReportsDashboard error:", err);
+      }
+    };
+
+    load();
+  }, []);
 
   return (
     <div className="p-4 md:p-6 space-y-6">
@@ -63,7 +79,9 @@ const [reorder, setReorder] = useState([]);
             <div key={p.product_id} className="p-3 border rounded-lg">
               <p className="font-bold">{p.name}</p>
               <p>Stock: {p.stock}</p>
-              <p className="text-green-600">Suggested: {p.suggested_order}</p>
+              <p className="text-green-600">
+                Suggested: {p.suggested_order}
+              </p>
             </div>
           ))}
         </div>
@@ -75,8 +93,13 @@ const [reorder, setReorder] = useState([]);
 
         <div className="space-y-2 mt-3">
           {analytics?.daily?.map((d, i) => (
-            <div key={i} className="flex justify-between border-b py-1">
-              <span>{d.date}</span>
+            <div
+              key={i}
+              className="flex justify-between border-b py-1"
+            >
+              <span>
+                {d.date ? formatDate(d.date) : "No date"}
+              </span>
               <span>{d.total} €</span>
             </div>
           ))}

@@ -18,6 +18,7 @@ import saleRouter from "./routes/saleRoute.js";
 import inventoryRouter from "./routes/inventoryRoute.js";
 import reportRouter from "./routes/reportRoute.js";
 import models from "./models/index.js";
+import analyticsRouter from "./routes/analyticsRoute.js";
 
 
 // await sequelize.sync();
@@ -97,6 +98,7 @@ app.use("/api/sales", saleRouter);
 app.use("/api/inventory", inventoryRouter);
 app.use("/api/sales", saleRouter);
 app.use("/api/reports", reportRouter);
+app.use("/api/analytics", analyticsRouter);
 
 /* -------------------- HEALTH CHECK -------------------- */
 app.get("/", (req, res) => {

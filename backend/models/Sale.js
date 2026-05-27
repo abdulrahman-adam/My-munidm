@@ -51,6 +51,10 @@ const Sale = sequelize.define(
       allowNull: true,
     },
 
+    sale_date: {
+  type: DataTypes.DATE,
+  defaultValue: DataTypes.NOW
+}, 
     offline_synced: {
       type: DataTypes.BOOLEAN,
       defaultValue: true,
