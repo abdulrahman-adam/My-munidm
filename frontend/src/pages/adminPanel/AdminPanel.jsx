@@ -20,82 +20,47 @@ import { useAppContext } from "../../context/AppContext";
 import Register from "../auth/Register";
 
 export default function AdminPanel() {
-  const {
-    user,
-    isAdmin,
-    isManager,
-    currency,
-    offlineSales,
 
-    // PRODUCTS
-    getProducts,
+  
+  
 
-    // SALES
-    sales,
-    getAllSales,
 
-    // USERS
-    getUsers,
 
-    // INVENTORY
-    getLowStockProducts,
 
-    // CATEGORY
-    categories,
 
-  } = useAppContext();
+const {
+  user,
+  isAdmin,
+  isManager,
+  currency,
+  offlineSales,
+  sales,
+  categories,
+  products = [],
+  users = [],
+  lowStock = [],
+  getAllSales,
+  getUsers,
+  getProducts,
+  getLowStockProducts,
+} = useAppContext();
 
-  const [showRegister, setShowRegister] = useState(false);
+const [showRegister, setShowRegister] = useState(false);
+const [loading, setLoading] = useState(true);
 
-  const [loading, setLoading] = useState(true);
 
-  const [products, setProducts] = useState([]);
 
-  const [users, setUsers] = useState([]);
 
-  const [lowStock, setLowStock] = useState([]);
-
-  const [recentTransactions, setRecentTransactions] = useState([]);
 
   /* =========================================================
      LOAD ALL REAL DATABASE DATA
   ========================================================= */
-  useEffect(() => {
-    const loadDashboard = async () => {
-      try {
-        setLoading(true);
-
-        const [
-          productsData,
-          salesData,
-          usersData,
-          lowStockData,
-        ] = await Promise.all([
-          getProducts(),
-          getAllSales(),
-          getUsers(),
-          getLowStockProducts(),
-        ]);
-
-        setProducts(productsData || []);
-
-        setUsers(usersData || []);
-
-        setLowStock(lowStockData || []);
-
-        setRecentTransactions(
-          (salesData || []).slice(0, 8)
-        );
-
-      } catch (error) {
-        console.log("DASHBOARD_LOAD_ERROR:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadDashboard();
-  }, []);
+useEffect(() => {
+  // getProducts();
+  // getUsers();
+  // getAllSales();
+  getLowStockProducts();
+}, []);
 
   /* =========================================================
      CALCULATIONS
@@ -118,16 +83,15 @@ export default function AdminPanel() {
 
   const totalOrders = sales?.length || 0;
 
-  const activeCashiers = users.filter(
-    (u) =>
-      u.role?.toUpperCase() === "CASHIER"
-  ).length;
+const activeCashiers = (users || []).filter(
+  (u) => u.role?.toUpperCase() === "CASHIER"
+).length;
 
-  const totalProducts = products.length;
+const totalProducts = (products || []).length;
 
-  const expiredProducts = products.filter(
-    (p) => p.is_expired
-  ).length;
+ const expiredProducts = (products || []).filter(
+  (p) => p.is_expired
+).length;
 
   const expiringSoon = products.filter(
     (p) => p.is_expiring_soon
@@ -135,13 +99,11 @@ export default function AdminPanel() {
 
   const totalCategories = categories?.length || 0;
 
-  const totalStockValue = products.reduce(
-    (acc, p) =>
-      acc +
-      Number(p.price || 0) *
-        Number(p.stock || 0),
-    0
-  );
+const totalStockValue = (products || []).reduce(
+  (acc, p) =>
+    acc + Number(p.price || 0) * Number(p.stock || 0),
+  0
+);
 
   const stats = [
     {
@@ -218,6 +180,13 @@ export default function AdminPanel() {
       bg: "bg-teal-500/10",
     },
   ];
+
+  const recentTransactions = useMemo(() => {
+  return (sales || [])
+    .slice()
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, 10); // last 10 sales
+}, [sales]);
 
   return (
     <div className="space-y-8">

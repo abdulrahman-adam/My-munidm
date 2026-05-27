@@ -28,6 +28,7 @@ export const AppContext = createContext();
 ========================================================= */
 
 export const AppContextProvider = ({ children }) => {
+   console.log("🔁 AppContext RENDER"); // 👈 HERE (top of component)
   const navigate = useNavigate();
 
   const currency = import.meta.env.VITE_CURRENCY || "€";
@@ -36,7 +37,8 @@ export const AppContextProvider = ({ children }) => {
      AUTH STATES
   ========================================================= */
 
-  const [user, setUser] = useState(null);
+const [user, setUser] = useState(null);
+const [users, setUsers] = useState([]);
 
   const [token, setToken] = useState(
     localStorage.getItem("token") || ""
@@ -50,6 +52,17 @@ export const AppContextProvider = ({ children }) => {
   const [categories, setCategories] = useState([]);
   const [catLoading, setCatLoading] = useState(false);
 
+ /* =========================
+     PRODUCT STATE
+  ========================= */
+  // const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [prodLoading, setProdLoading] = useState(false);
+
+  /* =========================
+     LOWSTOCK STATE
+  ========================= */
+const [lowStock, setLowStock] = useState([]);
   /* =========================================================
     INVENTORY STATES
   ========================================================= */
@@ -360,21 +373,22 @@ const logout = () => {
   /* =========================================================
      USERS CRUD
   ========================================================= */
+const getUsers = async () => {
+  try {
+    const res = await axios.get("/api/users");
 
-  const getUsers = async () => {
-    try {
-      const res = await axios.get("/api/users");
+    setUsers(res.data.users); // ✅ correct
 
-      return res.data.users;
-    } catch (error) {
-      toast.error(
-        error.response?.data?.message ||
-          "Failed to fetch users"
-      );
+    return res.data.users;
+  } catch (error) {
+    toast.error(
+      error.response?.data?.message ||
+        "Failed to fetch users"
+    );
 
-      return [];
-    }
-  };
+    return [];
+  }
+};
 
   const getUserById = async (id) => {
     try {
@@ -699,20 +713,74 @@ const getProductByBarcode = async (barcode) => {
 📦 GET ALL PRODUCTS
 ========================= */
 
+// const getProducts = async () => {
+//   try {
+//     const res = await axios.get("/api/products/all");
+
+//     const products = res.data?.products;
+    
+    
+
+//     if (!Array.isArray(products)) {
+//       console.warn("getProducts: invalid response format", res.data);
+//       return [];
+//     }
+
+//     const now = new Date();
+
+//     // ✅ NEW: enrich products with expiration logic
+//     const enrichedProducts = products.map((product) => {
+//       const expDate = product.expiration_date
+//         ? new Date(product.expiration_date)
+//         : null;
+
+//       let is_expired = false;
+//       let is_expiring_soon = false;
+
+//       if (expDate) {
+//         is_expired = expDate < now;
+
+//         const diffDays =
+//           (expDate - now) / (1000 * 60 * 60 * 24);
+
+//         is_expiring_soon = diffDays <= 7 && diffDays >= 0;
+//       }
+
+//       return {
+//         ...product,
+//         expiration_date: expDate,
+//         is_expired,
+//         is_expiring_soon,
+//       };
+//     });
+
+//     return enrichedProducts;
+//   } catch (error) {
+//     console.error("GET_PRODUCTS_ERROR:", error);
+
+//     toast.error(
+//       error.response?.data?.message || "Failed to fetch products"
+//     );
+
+//     return [];
+//   }
+// };
+
+
+
 const getProducts = async () => {
+  console.log("🌍 API CALL: getProducts");
   try {
+    setProdLoading(true);
+
     const res = await axios.get("/api/products/all");
 
     const products = res.data?.products;
 
-    if (!Array.isArray(products)) {
-      console.warn("getProducts: invalid response format", res.data);
-      return [];
-    }
+    if (!Array.isArray(products)) return [];
 
     const now = new Date();
 
-    // ✅ NEW: enrich products with expiration logic
     const enrichedProducts = products.map((product) => {
       const expDate = product.expiration_date
         ? new Date(product.expiration_date)
@@ -738,17 +806,19 @@ const getProducts = async () => {
       };
     });
 
+    setProducts(enrichedProducts); // ✅ STORE HERE
+
     return enrichedProducts;
+
   } catch (error) {
-    console.error("GET_PRODUCTS_ERROR:", error);
-
-    toast.error(
-      error.response?.data?.message || "Failed to fetch products"
-    );
-
+    toast.error("Failed to fetch products");
     return [];
+  } finally {
+    setProdLoading(false);
   }
 };
+
+
 /* =========================
 ✏️ UPDATE PRODUCT
 ========================= */
@@ -952,9 +1022,13 @@ const deleteProduct = async (id) => {
 const getLowStockProducts = async () => {
   try {
     const res = await axios.get("/api/inventory/low-stock");
+
+    setLowStock(res.data.products); // ✅ correct
+
     return res.data.products;
   } catch (error) {
     toast.error("Failed to load low stock");
+    return [];
   }
 };
 
@@ -1284,6 +1358,9 @@ const createReturn = async (data) => {
       updateProduct,
       deleteProduct,
       getProductByBarcode,
+      products,
+      setProducts,
+      prodLoading,
 
        /* SALES FUNCTIONS */
         sales,

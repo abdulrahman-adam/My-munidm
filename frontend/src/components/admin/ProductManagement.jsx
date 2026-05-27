@@ -32,6 +32,9 @@ const decimalRegex = /^[0-9]*\.?[0-9]*$/;
 const nameRegex = /^[a-zA-Z0-9\s\-_.]{2,}$/;
 
 export default function ProductManagement() {
+
+  console.log("🔄 ProductManagement RENDER");
+
   const {
     getProducts,
     createProduct,
@@ -59,17 +62,21 @@ export default function ProductManagement() {
   const [quantity, setQuantity] = useState("");
   const [unitPrice, setUnitPrice] = useState("");
   const [unitCostPrice, setUnitCostPrice] = useState("");
+  const [recentTransactions, setRecentTransactions] = useState([]);
 
   /* =========================
      LOAD DATA
   ========================= */
   const loadData = async () => {
+    console.log("📡 loadData CALLED");
     setLoading(true);
 
     try {
       const data = await getProducts();
+      console.log("📦 products received:", data);
       setProducts(Array.isArray(data) ? data : []);
     } catch (error) {
+      console.log("❌ loadData ERROR:", error);
       console.error(error);
       setProducts([]);
     } finally {
@@ -78,6 +85,7 @@ export default function ProductManagement() {
   };
 
   useEffect(() => {
+    console.log("🚀 useEffect INIT (loadData + categories)");
     loadData();
     getCategories?.();
   }, []);
