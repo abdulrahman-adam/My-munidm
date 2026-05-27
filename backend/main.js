@@ -6,9 +6,24 @@ import dotenv from "dotenv";
 import connectDB, { sequelize } from "./configs/db.js";
 import connectCloudinary from "./configs/cloudinary.js";
 
-// 
+/* =========================
+   LOAD ENV
+========================= */
+dotenv.config();
+
+/* =========================
+   IMPORT CRON JOBS
+========================= */
 import "./cron/productExpirationCron.js";
-// Routes
+
+/* =========================
+   IMPORT MODELS
+========================= */
+import models from "./models/index.js";
+
+/* =========================
+   IMPORT ROUTES
+========================= */
 import userRouter from "./routes/userRoute.js";
 import authRouter from "./routes/authRoute.js";
 import categoryRouter from "./routes/categoryRoute.js";
@@ -17,17 +32,17 @@ import returnRouter from "./routes/returnRoutes.js";
 import saleRouter from "./routes/saleRoute.js";
 import inventoryRouter from "./routes/inventoryRoute.js";
 import reportRouter from "./routes/reportRoute.js";
-import models from "./models/index.js";
 import analyticsRouter from "./routes/analyticsRoute.js";
 
-
-// await sequelize.sync();
-
-dotenv.config();
+/* =========================
+   EXPRESS APP
+========================= */
 const app = express();
 const port = process.env.PORT || 5000;
 
-/* -------------------- DATABASE CONNECTION -------------------- */
+/* =========================
+   DATABASE CONNECTION
+========================= */
 try {
   await connectDB();
   console.log("✅ Database Connected");
@@ -36,7 +51,9 @@ try {
   process.exit(1);
 }
 
-/* -------------------- CLOUDINARY -------------------- */
+/* =========================
+   CLOUDINARY
+========================= */
 try {
   connectCloudinary();
   console.log("☁️ Cloudinary Connected");
@@ -44,16 +61,36 @@ try {
   console.error("❌ Cloudinary Error:", error);
 }
 
-/* -------------------- SYNC DB -------------------- */
+/* =========================
+   INITIALIZE ASSOCIATIONS
+========================= */
+
+Object.keys(models).forEach((modelName) => {
+  if (models[modelName].associate) {
+    models[modelName].associate(models);
+  }
+});
+
+console.log("✅ Sequelize Associations Loaded");
+
+/* =========================
+   DATABASE SYNC
+========================= */
 try {
-  await sequelize.sync({ alter: true });
-  // await sequelize.authenticate();
+  // IMPORTANT:
+  // Use alter only during development
+
+  await sequelize.sync();
+
   console.log("✅ MySQL Tables Synchronized");
 } catch (error) {
-  console.error("❌ MySQL Sync/Seed Error:", error);
+  console.error("❌ MySQL Sync Error:", error);
 }
 
-/* -------------------- CORS CONFIG -------------------- */
+/* =========================
+   CORS CONFIG
+========================= */
+
 const allowedOrigins = [
   "https://munidm.fr",
   "https://www.munidm.fr",
@@ -75,20 +112,49 @@ const corsOptions = {
       callback(new Error("CORS Policy Error"));
     }
   },
+
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+
+  methods: [
+    "GET",
+    "POST",
+    "PUT",
+    "DELETE",
+    "OPTIONS",
+  ],
+
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+  ],
 };
 
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
 
-/* -------------------- MIDDLEWARES -------------------- */
-app.use(cookieParser());
-app.use(express.json({ limit: "100mb" }));
-app.use(express.urlencoded({ extended: true, limit: "100mb" }));
+/* =========================
+   MIDDLEWARES
+========================= */
 
-/* -------------------- ROUTES -------------------- */
+app.use(cookieParser());
+
+app.use(
+  express.json({
+    limit: "100mb",
+  })
+);
+
+app.use(
+  express.urlencoded({
+    extended: true,
+    limit: "100mb",
+  })
+);
+
+/* =========================
+   ROUTES
+========================= */
+
 app.use("/api/users", userRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/category", categoryRouter);
@@ -96,29 +162,42 @@ app.use("/api/products", productRouter);
 app.use("/api/returns", returnRouter);
 app.use("/api/sales", saleRouter);
 app.use("/api/inventory", inventoryRouter);
-app.use("/api/sales", saleRouter);
 app.use("/api/reports", reportRouter);
 app.use("/api/analytics", analyticsRouter);
 
-/* -------------------- HEALTH CHECK -------------------- */
+/* =========================
+   HEALTH CHECK
+========================= */
+
 app.get("/", (req, res) => {
   res.send("API IS WORKING NOW");
 });
 
-/* -------------------- GLOBAL ERROR HANDLER -------------------- */
+/* =========================
+   GLOBAL ERROR HANDLER
+========================= */
+
 app.use((err, req, res, next) => {
   console.error("🔥 Server Error:", err);
+
   res.status(500).json({
     success: false,
-    message: "Internal Server Error",
+    message: err.message || "Internal Server Error",
   });
 });
 
-/* -------------------- START SERVER -------------------- */
+/* =========================
+   START SERVER
+========================= */
+
 app.listen(port, () => {
-  console.log(`🚀 Server running on http://localhost:${port}`);
+  console.log(
+    `🚀 Server running on http://localhost:${port}`
+  );
 });
 
+/* =========================
+   RUN SEED
+========================= */
 
-// RUB the SEED
 // docker exec -it munidm_backend npm run seed:admin

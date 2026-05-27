@@ -18,6 +18,7 @@ const Sale = sequelize.define(
     cashier_name: {
       type: DataTypes.STRING,
       allowNull: true,
+      trim: true,
     },
 
     invoice_number: {
@@ -29,6 +30,7 @@ const Sale = sequelize.define(
     total: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
+      defaultValue: 0,
     },
 
     payment_method: {
@@ -52,9 +54,11 @@ const Sale = sequelize.define(
     },
 
     sale_date: {
-  type: DataTypes.DATE,
-  defaultValue: DataTypes.NOW
-}, 
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
+
     offline_synced: {
       type: DataTypes.BOOLEAN,
       defaultValue: true,
@@ -63,16 +67,22 @@ const Sale = sequelize.define(
   {
     tableName: "sales",
     timestamps: true,
+    createdAt: "createdAt",
+    updatedAt: "updatedAt",
   }
 );
 
 /* =========================
-   ASSOCIATIONS (IMPORTANT)
+   ASSOCIATIONS
+   (ONLY KEEP HERE)
 ========================= */
+
 Sale.associate = (models) => {
   Sale.hasMany(models.SaleItem, {
     foreignKey: "sale_id",
     as: "items",
+    onDelete: "CASCADE",
+    hooks: true,
   });
 };
 
