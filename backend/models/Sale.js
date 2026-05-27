@@ -10,9 +10,6 @@ const Sale = sequelize.define(
       primaryKey: true,
     },
 
-    /* =========================
-       CASHIER
-    ========================= */
     user_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -23,32 +20,19 @@ const Sale = sequelize.define(
       allowNull: true,
     },
 
-    /* =========================
-       INVOICE NUMBER
-    ========================= */
     invoice_number: {
       type: DataTypes.STRING,
       unique: true,
       allowNull: false,
     },
 
-    /* =========================
-       TOTAL
-    ========================= */
     total: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
     },
 
-    /* =========================
-       PAYMENT
-    ========================= */
     payment_method: {
-      type: DataTypes.ENUM(
-        "CASH",
-        "CARD",
-        "MOBILE"
-      ),
+      type: DataTypes.ENUM("CASH", "CARD", "MOBILE"),
       defaultValue: "CASH",
     },
 
@@ -57,35 +41,21 @@ const Sale = sequelize.define(
       allowNull: true,
     },
 
-    /* =========================
-       STATUS
-    ========================= */
     status: {
-      type: DataTypes.ENUM(
-        "COMPLETED",
-        "CANCELLED",
-        "PENDING"
-      ),
+      type: DataTypes.ENUM("COMPLETED", "CANCELLED", "PENDING"),
       defaultValue: "COMPLETED",
     },
 
-    /* =========================
-       SHIFT SYSTEM
-    ========================= */
     shift_id: {
       type: DataTypes.STRING,
       allowNull: true,
     },
 
-    /* =========================
-       OFFLINE MODE
-    ========================= */
     offline_synced: {
       type: DataTypes.BOOLEAN,
       defaultValue: true,
     },
   },
-
   {
     tableName: "sales",
     timestamps: true,
