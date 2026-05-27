@@ -70,7 +70,7 @@ const Sale = sequelize.define(
 Sale.associate = (models) => {
   Sale.hasMany(models.SaleItem, {
     foreignKey: "sale_id",
-    as: "items",
+    as: "saleItems",
     onDelete: "CASCADE",
   });
 };

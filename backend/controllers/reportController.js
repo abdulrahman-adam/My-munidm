@@ -31,7 +31,7 @@ export const generateDailyReport = async (req, res) => {
   include: [
     {
       model: SaleItem,
-      as: "items",
+      as: "saleItems",
       include: [{ model: Product, as: "product" }],
     },
   ],
@@ -92,7 +92,7 @@ export const generateDailyReport = async (req, res) => {
 
       doc.text("----------------------------------------");
 
-      const items = sale.items || [];
+      const items = sale.saleItems || [];
 
       if (!items.length) {
         doc.text("No items found");
