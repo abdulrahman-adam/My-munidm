@@ -28,7 +28,6 @@ const Sale = sequelize.define(
 
     total: {
       type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
       defaultValue: 0,
     },
 
@@ -52,6 +51,10 @@ const Sale = sequelize.define(
       allowNull: true,
     },
 
+    sale_date: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
+    },
 
     offline_synced: {
       type: DataTypes.BOOLEAN,
@@ -64,13 +67,11 @@ const Sale = sequelize.define(
   }
 );
 
-/* =========================
-   ASSOCIATIONS (ONLY HERE)
-========================= */
+/* IMPORTANT: ONLY ONE RELATION */
 Sale.associate = (models) => {
   Sale.hasMany(models.SaleItem, {
     foreignKey: "sale_id",
-    as: "saleItems",
+    as: "saleItems", // ✅ ONLY THIS ONE
     onDelete: "CASCADE",
   });
 };
