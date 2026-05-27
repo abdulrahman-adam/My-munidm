@@ -30,13 +30,39 @@ const [reorder, setReorder] = useState([]);
 }, []);
 
 
-  const downloadReport = async () => {
-  window.open(
-    `${import.meta.env.VITE_BACKEND_URL}/reports/daily-report`,
-    "_blank"
-  );
-};
+const downloadReport = async () => {
+  try {
+    const response = await axios.get(
+      "/api/reports/daily-report",
+      {
+        responseType: "blob",
+      }
+    );
 
+    const fileURL = window.URL.createObjectURL(
+      response.data
+    );
+
+    const link = document.createElement("a");
+
+    link.href = fileURL;
+    link.download = "daily-report.pdf";
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    link.remove();
+
+    window.URL.revokeObjectURL(fileURL);
+
+  } catch (error) {
+    console.error(
+      "Download report error:",
+      error
+    );
+  }
+};
 
   return (
     <div className="p-4 md:p-6 space-y-6">
