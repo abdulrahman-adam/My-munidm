@@ -68,7 +68,7 @@ export const generateDailyReport = async (req, res) => {
 
       doc.text("----------------------------------------");
 
-      const items = sale.items || [];
+      const items = sale.saleItems || [];
 
       if (items.length === 0) {
         doc.text("No items found");
