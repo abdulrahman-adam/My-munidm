@@ -1061,14 +1061,19 @@ const getReorderSuggestions = async () => {
      CREATE SALE
   ========================= */
   const createSale = async (data) => {
-    try {
-      const res = await axios.post("/api/sales/create", data);
-      setSales((prev) => [res.data.sale, ...prev]);
-      return res.data;
-    } catch (error) {
-      console.log("CREATE SALE ERROR:", error.message);
-    }
-  };
+  try {
+    const res = await axios.post("/api/sales/create", {
+      ...data,
+      items: data.items, // 🔥 MUST exist
+    });
+
+    setSales((prev) => [res.data.sale, ...prev]);
+
+    return res.data;
+  } catch (error) {
+    console.log("CREATE SALE ERROR:", error.response?.data || error.message);
+  }
+};
 
 
     /* =========================

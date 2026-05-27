@@ -1,48 +1,64 @@
 import Sale from "../models/Sale.js";
 import { Op } from "sequelize";
+import SaleItem from "../models/SaleItem.js";
 
 /* =========================
    CREATE SALE
 ========================= */
 export const createSale = async (req, res) => {
+  const transaction = await sequelize.transaction();
+
   try {
     const {
       user_id,
       cashier_name,
       invoice_number,
-      total,
       payment_method,
       payment_reference,
       shift_id,
-      offline_synced,
+      items, // 🔥 IMPORTANT (missing before)
     } = req.body;
 
-    if (!user_id || !invoice_number || !total) {
-      return res.status(400).json({
-        success: false,
-        message: "Missing required fields",
-      });
-    }
+    // 1. CREATE SALE
+    const sale = await Sale.create(
+      {
+        user_id,
+        cashier_name,
+        invoice_number,
+        total: 0,
+        payment_method,
+        payment_reference,
+        shift_id,
+        status: "COMPLETED",
+      },
+      { transaction }
+    );
 
-    const sale = await Sale.create({
-      user_id,
-      cashier_name,
-      invoice_number,
-      total,
-      payment_method,
-      payment_reference,
-      shift_id,
-      offline_synced: offline_synced ?? true,
-      status: "COMPLETED",
-    });
+    // 2. CREATE ITEMS (🔥 THIS WAS MISSING)
+    const saleItems = items.map((i) => ({
+      sale_id: sale.id,
+      product_id: i.product_id,
+      quantity: i.quantity,
+      price: i.price,
+      subtotal: i.quantity * i.price,
+    }));
+
+    await SaleItem.bulkCreate(saleItems, { transaction });
+
+    // 3. UPDATE TOTAL
+    const total = saleItems.reduce((sum, i) => sum + i.subtotal, 0);
+
+    sale.total = total;
+    await sale.save({ transaction });
+
+    await transaction.commit();
 
     return res.status(201).json({
       success: true,
-      message: "Sale created successfully",
       sale,
     });
   } catch (error) {
-    console.log(error);
+    await transaction.rollback();
 
     return res.status(500).json({
       success: false,
