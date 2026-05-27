@@ -1,7 +1,9 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../configs/db.js";
+
 import Category from "./Category.js";
 import InventoryLog from "./InventoryLog.js";
+import SaleItem from "./SaleItem.js";
 
 const Product = sequelize.define(
   "Product",
@@ -71,14 +73,14 @@ const Product = sequelize.define(
     },
 
     expiration_date: {
-  type: DataTypes.DATE,
-  allowNull: true,
-},
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
 
-expiry_notification_sent: {
-  type: DataTypes.BOOLEAN,
-  defaultValue: false,
-},
+    expiry_notification_sent: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
 
     is_active: {
       type: DataTypes.BOOLEAN,
@@ -93,7 +95,7 @@ expiry_notification_sent: {
 );
 
 /* =========================
-   ASSOCIATIONS (IMPORTANT)
+   CATEGORY RELATION
 ========================= */
 
 Category.hasMany(Product, {
@@ -106,6 +108,9 @@ Product.belongsTo(Category, {
   as: "category",
 });
 
+/* =========================
+   INVENTORY LOG RELATION
+========================= */
 
 Product.hasMany(InventoryLog, {
   foreignKey: "product_id",
@@ -115,6 +120,15 @@ Product.hasMany(InventoryLog, {
 InventoryLog.belongsTo(Product, {
   foreignKey: "product_id",
   as: "product",
+});
+
+/* =========================
+   SALE ITEM RELATION
+========================= */
+
+Product.hasMany(SaleItem, {
+  foreignKey: "product_id",
+  as: "saleItems",
 });
 
 export default Product;

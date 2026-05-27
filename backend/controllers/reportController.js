@@ -5,11 +5,23 @@ import Sale from "../models/Sale.js";
 import SaleItem from "../models/SaleItem.js";
 import Product from "../models/Product.js";
 
-export const generateDailyReport = async (req, res) => {
+export const generateDailyReport = async (
+  req,
+  res
+) => {
   try {
+
+    /* =========================
+       TODAY DATE
+    ========================= */
+
     const today = new Date();
 
     today.setHours(0, 0, 0, 0);
+
+    /* =========================
+       GET SALES
+    ========================= */
 
     const sales = await Sale.findAll({
       where: {
@@ -21,12 +33,27 @@ export const generateDailyReport = async (req, res) => {
       include: [
         {
           model: SaleItem,
-          include: [Product],
+          as: "SaleItems",
+
+          include: [
+            {
+              model: Product,
+              as: "Product",
+            },
+          ],
         },
       ],
+
+      order: [["createdAt", "DESC"]],
     });
 
-    const doc = new PDFDocument();
+    /* =========================
+       PDF DOCUMENT
+    ========================= */
+
+    const doc = new PDFDocument({
+      margin: 40,
+    });
 
     res.setHeader(
       "Content-Type",
@@ -40,58 +67,124 @@ export const generateDailyReport = async (req, res) => {
 
     doc.pipe(res);
 
+    /* =========================
+       TITLE
+    ========================= */
+
     doc
       .fontSize(20)
       .text("DAILY SALES REPORT", {
         align: "center",
       });
 
-    doc.moveDown();
+    doc.moveDown(2);
 
     let totalRevenue = 0;
 
+    /* =========================
+       SALES LOOP
+    ========================= */
+
     sales.forEach((sale) => {
+
       doc
         .fontSize(12)
-        .text(`Invoice: ${sale.invoice_number}`);
+        .text(
+          `Invoice: ${sale.invoice_number}`
+        );
 
       doc.text(
         `Payment: ${sale.payment_method}`
       );
 
       doc.text(
-        "-----------------------------"
+        `Date: ${new Date(
+          sale.createdAt
+        ).toLocaleString()}`
       );
 
-      sale.SaleItems.forEach((item) => {
-        const line =
-          `${item.Product.name} | ` +
-          `${item.quantity} x ${item.price} = ${item.subtotal}`;
+      doc.moveDown(0.5);
 
-        doc.text(line);
+      doc.text(
+        "-----------------------------------"
+      );
 
-        totalRevenue += Number(
-          item.subtotal
-        );
-      });
+      /* =========================
+         SALE ITEMS
+      ========================= */
+
+      if (
+        sale.SaleItems &&
+        sale.SaleItems.length > 0
+      ) {
+
+        sale.SaleItems.forEach((item) => {
+
+          const productName =
+            item.Product?.name ||
+            "Unknown Product";
+
+          const quantity =
+            Number(item.quantity) || 0;
+
+          const price =
+            Number(item.price) || 0;
+
+          const subtotal =
+            Number(item.subtotal) || 0;
+
+          doc.text(
+            `${productName} | ${quantity} x ${price} € = ${subtotal} €`
+          );
+
+          totalRevenue += subtotal;
+        });
+
+      } else {
+
+        doc.text("No items found");
+
+      }
 
       doc.moveDown();
     });
 
-    doc.fontSize(14).text(
-      `TOTAL REVENUE: ${totalRevenue} €`,
-      {
-        align: "right",
-      }
-    );
+    /* =========================
+       TOTAL
+    ========================= */
+
+    doc.moveDown();
+
+    doc
+      .fontSize(14)
+      .text(
+        `TOTAL REVENUE: ${totalRevenue.toFixed(2)} €`,
+        {
+          align: "right",
+        }
+      );
+
+    /* =========================
+       END PDF
+    ========================= */
 
     doc.end();
 
   } catch (error) {
-    console.log(error);
 
-    res.status(500).json({
-      message: error.message,
-    });
+    console.error(
+      "DAILY REPORT ERROR:",
+      error
+    );
+
+    if (!res.headersSent) {
+
+      res.status(500).json({
+        message:
+          "Failed to generate daily report",
+        error: error.message,
+      });
+
+    }
   }
 };
