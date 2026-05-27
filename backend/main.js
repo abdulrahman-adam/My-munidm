@@ -43,6 +43,7 @@ try {
 /* -------------------- SYNC DB -------------------- */
 try {
   await sequelize.sync({ alter: true });
+  // await sequelize.authenticate();
   console.log("✅ MySQL Tables Synchronized");
 } catch (error) {
   console.error("❌ MySQL Sync/Seed Error:", error);

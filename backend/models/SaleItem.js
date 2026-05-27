@@ -2,7 +2,7 @@ import { DataTypes } from "sequelize";
 import { sequelize } from "../configs/db.js";
 
 import Sale from "./Sale.js";
-import Product from "./Product.js";
+
 
 const SaleItem = sequelize.define(
   "SaleItem",
@@ -57,9 +57,6 @@ SaleItem.belongsTo(Sale, {
    PRODUCT RELATION
 ========================= */
 
-SaleItem.belongsTo(Product, {
-  foreignKey: "product_id",
-  as: "Product",
-});
+
 
 export default SaleItem;

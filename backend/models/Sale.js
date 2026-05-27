@@ -1,7 +1,7 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../configs/db.js";
 
-import SaleItem from "./SaleItem.js";
+
 
 const Sale = sequelize.define(
   "Sale",
@@ -76,9 +76,6 @@ const Sale = sequelize.define(
    SALE ITEM RELATION
 ========================= */
 
-Sale.hasMany(SaleItem, {
-  foreignKey: "sale_id",
-  as: "SaleItems",
-});
+
 
 export default Sale;

@@ -85,7 +85,7 @@ const [reorder, setReorder] = useState([]);
         <div className="space-y-2 mt-3">
           <button
             onClick={downloadReport}
-            className="bg-black text-white px-4 py-2 rounded-lg"
+            className="bg-black text-white px-4 py-2 rounded-lg cursor-pointer"
           >
             Download Daily PDF Report
           </button>
