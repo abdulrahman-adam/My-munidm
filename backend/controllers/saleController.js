@@ -19,15 +19,22 @@ export const createSale = async (req, res) => {
       items,
     } = req.body;
 
+    // =====================
+    // VALIDATION
+    // =====================
     if (!user_id || !payment_method) {
+      await transaction.rollback();
       return res.status(400).json({ message: "Missing fields" });
     }
 
     if (!Array.isArray(items) || items.length === 0) {
+      await transaction.rollback();
       return res.status(400).json({ message: "Items required" });
     }
 
-    // 1. CREATE SALE FIRST (NO INVOICE YET)
+    // =====================
+    // CREATE SALE FIRST
+    // =====================
     const sale = await Sale.create(
       {
         user_id,
@@ -37,53 +44,80 @@ export const createSale = async (req, res) => {
         shift_id: shift_id || null,
         status: "COMPLETED",
         total: 0,
-        invoice_number: "TEMP", // placeholder
+        invoice_number: "TEMP",
       },
       { transaction }
     );
 
-    // 2. SAFE INVOICE FROM REAL ID
-    const invoice_number = `POS-${String(sale.id).padStart(4, "0")}`;
+    // =====================
+    // SAFE INVOICE
+    // =====================
+    const invoice_number = `POS-${String(sale.id).padStart(6, "0")}`;
 
-    sale.invoice_number = invoice_number;
-    await sale.save({ transaction });
+    await Sale.update(
+      { invoice_number },
+      { where: { id: sale.id }, transaction }
+    );
 
-    // 3. ITEMS
-    const saleItems = items.map((i) => ({
-      sale_id: sale.id,
-      product_id: i.product_id,
-      quantity: Number(i.quantity),
-      price: Number(i.price),
-      subtotal: Number(i.quantity) * Number(i.price),
-    }));
+    // =====================
+    // VALIDATE ITEMS (IMPORTANT)
+    // =====================
+    const saleItems = items.map((i) => {
+      if (!i.product_id) {
+        throw new Error("Missing product_id in items");
+      }
 
+      return {
+        sale_id: sale.id,
+        product_id: i.product_id,
+        quantity: Number(i.quantity),
+        price: Number(i.price),
+        subtotal: Number(i.quantity) * Number(i.price),
+      };
+    });
+
+    // =====================
+    // INSERT ITEMS
+    // =====================
     await SaleItem.bulkCreate(saleItems, { transaction });
 
-    // 4. TOTAL
+    // =====================
+    // TOTAL
+    // =====================
     const total = saleItems.reduce((sum, i) => sum + i.subtotal, 0);
 
-    sale.total = Number(total.toFixed(2));
-    await sale.save({ transaction });
+    await Sale.update(
+      { total: Number(total.toFixed(2)) },
+      { where: { id: sale.id }, transaction }
+    );
 
+    // =====================
+    // COMMIT
+    // =====================
     await transaction.commit();
+
+    const finalSale = await Sale.findByPk(sale.id, {
+      include: [{ model: SaleItem, as: "saleItems" }],
+    });
 
     return res.status(201).json({
       success: true,
-      sale,
+      sale: finalSale,
     });
 
   } catch (error) {
     await transaction.rollback();
 
-    console.error("CREATE SALE ERROR:", error);
+    console.error("🔥 CREATE SALE ERROR FULL:");
+    console.error(error);
 
     return res.status(500).json({
       success: false,
       message: error.message,
+      details: error.errors || null,
     });
   }
 };
-
 
 
 
