@@ -1060,18 +1060,23 @@ const getReorderSuggestions = async () => {
  /* =========================
      CREATE SALE
   ========================= */
-  const createSale = async (data) => {
+const createSale = async (data) => {
   try {
+    console.log("🔥 CREATE SALE INPUT DATA:", data);
+    console.log("🧾 ITEMS BEFORE SEND:", data.items);
+
     const res = await axios.post("/api/sales/create", {
       ...data,
       items: data.items, // 🔥 MUST exist
     });
 
+    console.log("✅ SALE CREATED RESPONSE:", res.data);
+
     setSales((prev) => [res.data.sale, ...prev]);
 
     return res.data;
   } catch (error) {
-    console.log("CREATE SALE ERROR:", error.response?.data || error.message);
+    console.log("❌ CREATE SALE ERROR:", error.response?.data || error.message);
   }
 };
 

@@ -338,6 +338,7 @@ export default function Cashier() {
     const items = cart.map((p) => ({
       product_id: p.id,
       quantity: p.quantity,
+      price: p.price, // ✅ IMPORTANT
     }));
 
     await createSale({
@@ -702,6 +703,7 @@ export default function Cashier() {
                 className="w-full bg-black hover:bg-gray-900 transition text-white py-4 rounded-2xl font-black text-lg flex items-center justify-center gap-2"
               >
                 <Receipt />
+                 </button>
                {showPayment && (
   <SplitPaymentModal
     total={total}
@@ -709,7 +711,7 @@ export default function Cashier() {
     onPay={handlePayment}
   />
 )}
-              </button>
+             
 
             </div>
           )}

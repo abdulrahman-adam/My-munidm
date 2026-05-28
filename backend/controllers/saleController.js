@@ -1,6 +1,7 @@
 import Sale from "../models/Sale.js";
 import { Op } from "sequelize";
 import SaleItem from "../models/SaleItem.js";
+import { sequelize } from "../configs/db.js";
 
 /* =========================
    CREATE SALE
