@@ -191,7 +191,7 @@ app.use((err, req, res, next) => {
    START SERVER
 ========================= */
 
-app.listen(port, () => {
+app.listen(port,"0.0.0.0", () => {
   console.log(
     `🚀 Server running on http://localhost:${port}`
   );
