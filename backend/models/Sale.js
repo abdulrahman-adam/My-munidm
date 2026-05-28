@@ -31,16 +31,10 @@ const Sale = sequelize.define(
       defaultValue: 0,
     },
 
-   payment_method: {
-  type: DataTypes.ENUM("CASH", "CARD", "MOBILE"),
+ payment_method: {
+  type: DataTypes.ENUM("CASH", "CARD"),
   defaultValue: "CASH",
 },
-
-    // payment_method: "MIXED",
-    // payment_split: {
-    //   cash,
-    //   card,
-    // },
 
     payment_reference: {
       type: DataTypes.STRING,

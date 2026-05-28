@@ -13,48 +13,56 @@ export const createSale = async (req, res) => {
     const {
       user_id,
       cashier_name,
-      invoice_number,
       payment_method,
       payment_reference,
       shift_id,
-      items, // 🔥 IMPORTANT (missing before)
+      items,
     } = req.body;
 
-    // 1. CREATE SALE
+    if (!user_id || !payment_method) {
+      return res.status(400).json({ message: "Missing fields" });
+    }
+
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ message: "Items required" });
+    }
+
+    // 1. CREATE SALE FIRST (NO INVOICE YET)
     const sale = await Sale.create(
       {
         user_id,
-        cashier_name,
-        invoice_number,
-        total: 0,
+        cashier_name: cashier_name || "SYSTEM",
         payment_method,
-        payment_reference,
-        shift_id,
+        payment_reference: payment_reference || null,
+        shift_id: shift_id || null,
         status: "COMPLETED",
+        total: 0,
+        invoice_number: "TEMP", // placeholder
       },
       { transaction }
     );
 
-    // 2. CREATE ITEMS (🔥 THIS WAS MISSING)
+    // 2. SAFE INVOICE FROM REAL ID
+    const invoice_number = `POS-${String(sale.id).padStart(4, "0")}`;
+
+    sale.invoice_number = invoice_number;
+    await sale.save({ transaction });
+
+    // 3. ITEMS
     const saleItems = items.map((i) => ({
       sale_id: sale.id,
       product_id: i.product_id,
-      quantity: i.quantity,
-      price: i.price,
-      subtotal: i.quantity * i.price,
+      quantity: Number(i.quantity),
+      price: Number(i.price),
+      subtotal: Number(i.quantity) * Number(i.price),
     }));
 
-    // await SaleItem.bulkCreate(saleItems, { transaction });
-    try {
-  await SaleItem.bulkCreate(saleItems, { transaction });
-} catch (err) {
-  console.log("❌ SALE ITEMS ERROR:", err);
-}
+    await SaleItem.bulkCreate(saleItems, { transaction });
 
-    // 3. UPDATE TOTAL
+    // 4. TOTAL
     const total = saleItems.reduce((sum, i) => sum + i.subtotal, 0);
 
-    sale.total = total;
+    sale.total = Number(total.toFixed(2));
     await sale.save({ transaction });
 
     await transaction.commit();
@@ -63,8 +71,11 @@ export const createSale = async (req, res) => {
       success: true,
       sale,
     });
+
   } catch (error) {
     await transaction.rollback();
+
+    console.error("CREATE SALE ERROR:", error);
 
     return res.status(500).json({
       success: false,
@@ -72,6 +83,10 @@ export const createSale = async (req, res) => {
     });
   }
 };
+
+
+
+
 
 /* =========================
    GET ALL SALES
