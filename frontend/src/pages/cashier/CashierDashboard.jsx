@@ -343,7 +343,7 @@ export default function Cashier() {
 
     await createSale({
       user_id: 1,
-      payment_method: card > 0 ? "CARD+CASH" : "CASH",
+      payment_method: card > 0 ? "CARD" : "CASH",
       payment_split: {
         cash,
         card,

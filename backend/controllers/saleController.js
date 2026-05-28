@@ -44,7 +44,12 @@ export const createSale = async (req, res) => {
       subtotal: i.quantity * i.price,
     }));
 
-    await SaleItem.bulkCreate(saleItems, { transaction });
+    // await SaleItem.bulkCreate(saleItems, { transaction });
+    try {
+  await SaleItem.bulkCreate(saleItems, { transaction });
+} catch (err) {
+  console.log("❌ SALE ITEMS ERROR:", err);
+}
 
     // 3. UPDATE TOTAL
     const total = saleItems.reduce((sum, i) => sum + i.subtotal, 0);
