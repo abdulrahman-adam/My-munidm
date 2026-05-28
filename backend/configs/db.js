@@ -16,13 +16,11 @@ const sequelize = new Sequelize(
         logging: console.log, // This will print every SQL query to your terminal
         logging: false, 
         dialectOptions: {
-    connectTimeout: 60000,
-    charset: 'utf8mb4',
-
-    ssl: {
-        rejectUnauthorized: false
-    }
-},
+            connectTimeout: 60000,
+            // 1. THIS IS THE CORRECT WAY to handle large packets 
+            // without needing SUPER privileges:
+            charset: 'utf8mb4',
+        },
         pool: {
             max: 10,
             min: 0,

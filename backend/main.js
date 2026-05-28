@@ -10,6 +10,7 @@ import connectCloudinary from "./configs/cloudinary.js";
    LOAD ENV
 ========================= */
 dotenv.config();
+console.log("DEBUG: .env load check - PORT is", process.env.PORT);
 
 /* =========================
    IMPORT CRON JOBS
