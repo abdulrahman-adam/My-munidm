@@ -39,7 +39,7 @@ import analyticsRouter from "./routes/analyticsRoute.js";
    EXPRESS APP
 ========================= */
 const app = express();
-const port = process.env.PORT || 5010;
+const port = process.env.PORT || 5000;
 
 /* =========================
    DATABASE CONNECTION
