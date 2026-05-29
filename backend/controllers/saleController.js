@@ -2,10 +2,125 @@ import Sale from "../models/Sale.js";
 import { Op } from "sequelize";
 import SaleItem from "../models/SaleItem.js";
 import { sequelize } from "../configs/db.js";
+import Product from "../models/Product.js";
 
 /* =========================
    CREATE SALE
 ========================= */
+// export const createSale = async (req, res) => {
+//   const transaction = await sequelize.transaction();
+
+//   try {
+//     const {
+//       user_id,
+//       cashier_name,
+//       payment_method,
+//       payment_reference,
+//       shift_id,
+//       items,
+//     } = req.body;
+
+//     // =====================
+//     // VALIDATION
+//     // =====================
+//     if (!user_id || !payment_method) {
+//       await transaction.rollback();
+//       return res.status(400).json({ message: "Missing fields" });
+//     }
+
+//     if (!Array.isArray(items) || items.length === 0) {
+//       await transaction.rollback();
+//       return res.status(400).json({ message: "Items required" });
+//     }
+
+//     // =====================
+//     // CREATE SALE FIRST
+//     // =====================
+//     const sale = await Sale.create(
+//       {
+//         user_id,
+//         cashier_name: cashier_name || "SYSTEM",
+//         payment_method,
+//         payment_reference: payment_reference || null,
+//         shift_id: shift_id || null,
+//         status: "COMPLETED",
+//         total: 0,
+//         invoice_number: "TEMP",
+//       },
+//       { transaction }
+//     );
+
+//     // =====================
+//     // SAFE INVOICE
+//     // =====================
+//     const invoice_number = `POS-${String(sale.id).padStart(6, "0")}`;
+
+//     await Sale.update(
+//       { invoice_number },
+//       { where: { id: sale.id }, transaction }
+//     );
+
+//     // =====================
+//     // VALIDATE ITEMS (IMPORTANT)
+//     // =====================
+//     const saleItems = items.map((i) => {
+//       if (!i.product_id) {
+//         throw new Error("Missing product_id in items");
+//       }
+
+//       return {
+//         sale_id: sale.id,
+//         product_id: i.product_id,
+//         quantity: Number(i.quantity),
+//         price: Number(i.price),
+//         subtotal: Number(i.quantity) * Number(i.price),
+//       };
+//     });
+
+//     // =====================
+//     // INSERT ITEMS
+//     // =====================
+//     await SaleItem.bulkCreate(saleItems, { transaction });
+
+//     // =====================
+//     // TOTAL
+//     // =====================
+//     const total = saleItems.reduce((sum, i) => sum + i.subtotal, 0);
+
+//     await Sale.update(
+//       { total: Number(total.toFixed(2)) },
+//       { where: { id: sale.id }, transaction }
+//     );
+
+//     // =====================
+//     // COMMIT
+//     // =====================
+//     await transaction.commit();
+
+//     const finalSale = await Sale.findByPk(sale.id, {
+//       include: [{ model: SaleItem, as: "saleItems" }],
+//     });
+
+//     return res.status(201).json({
+//       success: true,
+//       sale: finalSale,
+//     });
+
+//   } catch (error) {
+//     await transaction.rollback();
+
+//     console.error("🔥 CREATE SALE ERROR FULL:");
+//     console.error(error);
+
+//     return res.status(500).json({
+//       success: false,
+//       message: error.message,
+//       details: error.errors || null,
+//     });
+//   }
+// };
+
+
 export const createSale = async (req, res) => {
   const transaction = await sequelize.transaction();
 
@@ -33,7 +148,7 @@ export const createSale = async (req, res) => {
     }
 
     // =====================
-    // CREATE SALE FIRST
+    // CREATE SALE
     // =====================
     const sale = await Sale.create(
       {
@@ -50,7 +165,7 @@ export const createSale = async (req, res) => {
     );
 
     // =====================
-    // SAFE INVOICE
+    // INVOICE NUMBER
     // =====================
     const invoice_number = `POS-${String(sale.id).padStart(6, "0")}`;
 
@@ -60,19 +175,19 @@ export const createSale = async (req, res) => {
     );
 
     // =====================
-    // VALIDATE ITEMS (IMPORTANT)
+    // BUILD SALE ITEMS
     // =====================
-    const saleItems = items.map((i) => {
-      if (!i.product_id) {
+    const saleItems = items.map(({ product_id, quantity, price }) => {
+      if (!product_id) {
         throw new Error("Missing product_id in items");
       }
 
       return {
         sale_id: sale.id,
-        product_id: i.product_id,
-        quantity: Number(i.quantity),
-        price: Number(i.price),
-        subtotal: Number(i.quantity) * Number(i.price),
+        product_id,
+        quantity: Number(quantity),
+        price: Number(price),
+        subtotal: Number(quantity) * Number(price),
       };
     });
 
@@ -82,14 +197,30 @@ export const createSale = async (req, res) => {
     await SaleItem.bulkCreate(saleItems, { transaction });
 
     // =====================
-    // TOTAL
+    // TOTAL CALCULATION
     // =====================
-    const total = saleItems.reduce((sum, i) => sum + i.subtotal, 0);
+    const total = saleItems.reduce(
+      (sum, item) => sum + item.subtotal,
+      0
+    );
 
     await Sale.update(
       { total: Number(total.toFixed(2)) },
       { where: { id: sale.id }, transaction }
     );
+
+    // =====================
+    // 🔥 STOCK UPDATE (ADDED CODE)
+    // =====================
+    for (const { product_id, quantity } of saleItems) {
+      await Product.decrement(
+        { stock: quantity },
+        {
+          where: { id: product_id },
+          transaction,
+        }
+      );
+    }
 
     // =====================
     // COMMIT
@@ -108,7 +239,7 @@ export const createSale = async (req, res) => {
   } catch (error) {
     await transaction.rollback();
 
-    console.error("🔥 CREATE SALE ERROR FULL:");
+    console.error("🔥 CREATE SALE ERROR:");
     console.error(error);
 
     return res.status(500).json({
@@ -118,8 +249,6 @@ export const createSale = async (req, res) => {
     });
   }
 };
-
-
 
 
 /* =========================
