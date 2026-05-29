@@ -184,8 +184,10 @@ export default function ProductManagement() {
     setForm((prev) => ({
       ...prev,
       stock: qty.toString(),
-      price: (qty * singlePrice).toFixed(2),
-      cost_price: (qty * singleCost).toFixed(2),
+      // price: (qty * singlePrice).toFixed(2),
+      // cost_price: (qty * singleCost).toFixed(2),
+      price: singlePrice.toString(),
+      cost_price: singleCost.toString(),
     }));
   }, [quantity, unitPrice, unitCostPrice]);
 
