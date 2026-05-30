@@ -21,13 +21,6 @@ import Register from "../auth/Register";
 
 export default function AdminPanel() {
 
-  
-  
-
-
-
-
-
 const {
   user,
   isAdmin,
@@ -36,9 +29,9 @@ const {
   offlineSales,
   sales,
   categories,
-  products = [],
-  users = [],
-  lowStock = [],
+  products,
+  users,
+  lowStock,
   getAllSales,
   getUsers,
   getProducts,
@@ -49,18 +42,13 @@ const [showRegister, setShowRegister] = useState(false);
 const [loading, setLoading] = useState(true);
 
 
-
-
-
-  /* =========================================================
-     LOAD ALL REAL DATABASE DATA
-  ========================================================= */
-useEffect(() => {
-  getProducts();
-  // getUsers();
-  // getAllSales();
-  getLowStockProducts();
-}, []);
+const safeUsers = users ?? [];
+// const safeUsers = Array.isArray(users) ? users : [];
+const safeLowStock = lowStock ?? [];
+// const safeLowStock = Array.isArray(lowStock) ? lowStock : [];
+const safeProducts = products ?? [];
+const safeSales = sales ?? [];
+const safeOfflineSales = offlineSales ?? [];
 
   /* =========================================================
      CALCULATIONS
@@ -83,9 +71,11 @@ useEffect(() => {
 
   const totalOrders = sales?.length || 0;
 
-const activeCashiers = (users || []).filter(
-  (u) => u.role?.toUpperCase() === "CASHIER"
-).length;
+const activeCashiers = useMemo(() => {
+  return safeUsers.filter(
+    (u) => u.role?.toUpperCase() === "CASHIER"
+  ).length;
+}, [safeUsers]);
 
 const totalProducts = (products || []).length;
 
@@ -144,7 +134,7 @@ const totalStockValue = (products || []).reduce(
 
     {
       label: "Low Stock",
-      value: lowStock.length,
+      value: safeLowStock.length,
       icon: AlertTriangle,
       color:
         "from-orange-500 to-amber-500",
@@ -153,7 +143,8 @@ const totalStockValue = (products || []).reduce(
 
     {
       label: "Active Cashiers",
-      value: activeCashiers,
+      // value: activeCashiers,
+      value: safeUsers.length,
       icon: Users,
       color:
         "from-pink-500 to-rose-500",
@@ -187,6 +178,27 @@ const totalStockValue = (products || []).reduce(
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     .slice(0, 10); // last 10 sales
 }, [sales]);
+
+console.log("LOW STOCK:", lowStock ?? []);
+console.log("USERS:", users ?? []);
+
+
+useEffect(() => {
+  console.log("ADMIN PANEL USERS:", users);
+  console.log("ADMIN PANEL LOW STOCK:", lowStock);
+}, [users, lowStock]);
+
+
+useEffect(() => {
+  console.log("🔥 ADMIN PANEL RENDER STATE:", {
+    user,
+    users,
+    lowStock,
+    products
+  });
+}, [user, users, lowStock, products]);
+
+
 
   return (
     <div className="space-y-8">
@@ -522,7 +534,7 @@ const totalStockValue = (products || []).reduce(
               </span>
 
               <span className="px-3 py-1 rounded-xl bg-yellow-100 text-yellow-700 text-sm font-bold">
-                {lowStock.length}
+                {safeLowStock.length}
               </span>
             </div>
 

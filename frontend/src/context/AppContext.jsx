@@ -28,7 +28,7 @@ export const AppContext = createContext();
 ========================================================= */
 
 export const AppContextProvider = ({ children }) => {
-   console.log("🔁 AppContext RENDER"); // 👈 HERE (top of component)
+  
   const navigate = useNavigate();
 
   const currency = import.meta.env.VITE_CURRENCY || "€";
@@ -96,6 +96,16 @@ const [lowStock, setLowStock] = useState([]);
 //   },
 //   (error) => Promise.reject(error)
 // );
+
+axios.interceptors.request.use((config) => {
+  const currentToken = localStorage.getItem("token");
+
+  if (currentToken) {
+    config.headers.Authorization = `Bearer ${currentToken}`;
+  }
+
+  return config;
+});
 
 useEffect(() => {
   const interceptor = axios.interceptors.request.use(
@@ -373,14 +383,46 @@ const logout = () => {
   /* =========================================================
      USERS CRUD
   ========================================================= */
+// const getUsers = async () => {
+//   try {
+//     const res = await axios.get("/api/users");
+
+//     setUsers(res.data.users); // ✅ correct
+
+//     return res.data.users;
+//   } catch (error) {
+//     toast.error(
+//       error.response?.data?.message ||
+//         "Failed to fetch users"
+//     );
+
+//     return [];
+//   }
+// };
+
+
 const getUsers = async () => {
   try {
+    const role = user?.role?.toUpperCase();
+    const token = localStorage.getItem("token");
+
+    console.log("🧠 getUsers CALLED");
+    console.log("👤 ROLE:", role);
+    console.log("🔑 TOKEN EXISTS:", !!token);
+
     const res = await axios.get("/api/users");
 
-    setUsers(res.data.users); // ✅ correct
+    console.log("📦 USERS RESPONSE RAW:", res.data);
+    console.log("👥 USERS ARRAY:", res.data?.users);
 
-    return res.data.users;
+    setUsers(res.data.users || []);
+
+    return res.data.users || [];
   } catch (error) {
+     console.log("❌ USERS ERROR FULL:", error);
+  console.log("❌ STATUS:", error.response?.status);
+  console.log("❌ DATA:", error.response?.data);
+
     toast.error(
       error.response?.data?.message ||
         "Failed to fetch users"
@@ -389,6 +431,24 @@ const getUsers = async () => {
     return [];
   }
 };
+
+
+
+// const getUsers = async () => {
+//   try {
+//     const res = await axios.get("/api/users");
+
+//     const usersData = res.data?.users || [];
+
+//     setUsers(usersData);
+
+//     return usersData; // ✅ IMPORTANT
+//   } catch (error) {
+//     setUsers([]); // ✅ force consistency
+//     return [];
+//   }
+// };
+
 
   const getUserById = async (id) => {
     try {
@@ -1032,6 +1092,23 @@ const getLowStockProducts = async () => {
   }
 };
 
+
+// const getLowStockProducts = async () => {
+//   try {
+//     const res = await axios.get("/api/inventory/low-stock");
+
+//     const data = res.data?.products || [];
+
+//     setLowStock(data);
+
+//     return data; // ✅ IMPORTANT
+//   } catch (error) {
+//     setLowStock([]); // ✅ force consistency
+//     return [];
+//   }
+// };
+
+
 /* =========================
    ANALYTICS
 ========================= */
@@ -1372,6 +1449,32 @@ const downloadReport = async () => {
 
   }, [offlineSales]);
 
+
+ /* =========================================================
+     AUTO DATA LOADING
+  ========================================================= */
+useEffect(() => {
+  if (!token || !user?.role) return;
+
+ const loadInitialData = async () => {
+  const role = user?.role?.toUpperCase();
+
+  await getProducts();
+
+  const lowStockData = await getLowStockProducts();
+  const usersData = await getUsers();
+
+  console.log("FINAL LOW STOCK:", lowStockData);
+  console.log("FINAL USERS:", usersData);
+
+  if (role === "ADMIN" || role === "MANAGER") {
+    await getAllSales();
+  }
+};
+
+  loadInitialData();
+}, [token, user?.role]);
+
   /* =========================================================
      CONTEXT VALUE
   ========================================================= */
@@ -1408,6 +1511,7 @@ const downloadReport = async () => {
     getUserById,
     updateUser,
     deleteUser,
+    users,
 
     /* categories */
     categories,
@@ -1447,6 +1551,7 @@ const downloadReport = async () => {
         getLowStockProducts,
         getSalesAnalytics,
         getReorderSuggestions,
+        lowStock,
     // POS
     cart,
     setCart,
