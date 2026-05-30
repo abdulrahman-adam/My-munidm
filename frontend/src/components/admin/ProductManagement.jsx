@@ -32,7 +32,6 @@ const decimalRegex = /^[0-9]*\.?[0-9]*$/;
 const nameRegex = /^[a-zA-Z0-9\s\-_.]{2,}$/;
 
 export default function ProductManagement() {
-
   console.log("🔄 ProductManagement RENDER");
 
   const {
@@ -140,10 +139,9 @@ export default function ProductManagement() {
 
             await stopScanner();
           },
-          () => {}
+          () => {},
         );
       }, 300);
-
     } catch (error) {
       console.error(error);
 
@@ -231,24 +229,24 @@ export default function ProductManagement() {
   /* =========================
      HANDLE IMAGES
   ========================= */
- const handleImages = (e) => {
-  const files = e.target.files;
+  const handleImages = (e) => {
+    const files = e.target.files;
 
-  if (!files || files.length === 0) {
-    return toast.error("No images selected");
-  }
+    if (!files || files.length === 0) {
+      return toast.error("No images selected");
+    }
 
-  const fileArray = Array.from(files);
+    const fileArray = Array.from(files);
 
-  if (fileArray.length > 4) {
-    return toast.error("Maximum 4 images allowed");
-  }
+    if (fileArray.length > 4) {
+      return toast.error("Maximum 4 images allowed");
+    }
 
-  setForm((prev) => ({
-    ...prev,
-    images: fileArray,
-  }));
-};
+    setForm((prev) => ({
+      ...prev,
+      images: fileArray,
+    }));
+  };
 
   const normalizeImages = (images) => {
     if (!images) return [];
@@ -316,9 +314,7 @@ export default function ProductManagement() {
     e.preventDefault();
 
     if (!form.category_id || !form.name || !form.price) {
-      return toast.error(
-        "Category, Product Name and Price are required"
-      );
+      return toast.error("Category, Product Name and Price are required");
     }
 
     if (!nameRegex.test(form.name)) {
@@ -350,13 +346,12 @@ export default function ProductManagement() {
       speakMessage(
         editingProduct
           ? "Product updated successfully"
-          : "Product created successfully"
+          : "Product created successfully",
       );
 
       await closeModal();
 
       loadData();
-
     } catch (error) {
       console.error(error);
 
@@ -380,7 +375,6 @@ export default function ProductManagement() {
       speakMessage("Product deleted successfully");
 
       loadData();
-
     } catch (error) {
       console.error(error);
 
@@ -391,15 +385,12 @@ export default function ProductManagement() {
   /* =========================
      EXPIRATION
   ========================= */
-  const isExpired = (date) =>
-    date ? new Date(date) < new Date() : false;
+  const isExpired = (date) => (date ? new Date(date) < new Date() : false);
 
   const isExpiringSoon = (date) => {
     if (!date) return false;
 
-    const diff =
-      (new Date(date) - new Date()) /
-      (1000 * 60 * 60 * 24);
+    const diff = (new Date(date) - new Date()) / (1000 * 60 * 60 * 24);
 
     return diff <= 7 && diff >= 0;
   };
@@ -409,168 +400,154 @@ export default function ProductManagement() {
   ========================= */
 
   const getCategoryName = (category_id) => {
-  return categories?.find((c) => c.id === category_id)?.name || "Unknown";
-};
-
+    return categories?.find((c) => c.id === category_id)?.name || "Unknown";
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 p-3 sm:p-5 space-y-6">
-
+    <div className="w-full bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 p-0">
       {/* HEADER */}
       <div className="flex flex-col lg:flex-row justify-between gap-4 lg:items-center">
-
         <div>
           <h2 className="flex items-center gap-3 text-2xl sm:text-3xl font-black text-slate-800">
             <div className="bg-indigo-600 text-white p-2 rounded-2xl shadow-lg">
               <Package className="h-6 w-6" />
             </div>
-
             Product Management
           </h2>
 
-          <p className="text-gray-500 mt-1 text-sm">
+          <p className="text-gray-500 mt-1 text-sm text-center">
             Manage your products professionally
           </p>
         </div>
 
         <button
           onClick={openCreate}
-          className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-2xl shadow-xl transition-all active:scale-95"
+          className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 shadow-xl transition-all active:scale-95"
         >
           <Plus className="h-5 w-5" />
-
           Add Product
         </button>
       </div>
 
       {/* PRODUCTS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 flex justify-center">
+        <div className="w-full max-w-7xl space-y-6">
+          {/* PRODUCTS */}
+          <div className="w-full grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-6 justify-items-center p-0">
+            {loading ? (
+              <div className="col-span-full text-center py-20 w-full">
+                <div className="animate-spin h-14 w-14 rounded-full border-4 border-indigo-600 border-t-transparent mx-auto"></div>
 
-        {loading ? (
-          <div className="col-span-full text-center py-20">
-            <div className="animate-spin h-14 w-14 rounded-full border-4 border-indigo-600 border-t-transparent mx-auto"></div>
-
-            <p className="mt-4 text-gray-500">
-              Loading products...
-            </p>
-          </div>
-        ) : (
-          products.map((p) => (
-            <div
-              key={p.id}
-              className="bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-md hover:shadow-2xl transition-all duration-500"
-            >
-
-              {/* IMAGE */}
-              <div className="h-52 bg-gray-100 overflow-hidden relative">
-
-                {normalizeImages(p.images).length ? (
-                  normalizeImages(p.images).map((img, i) => (
-                    <img
-                      key={i}
-                      src={img?.url || img}
-                      alt={p.name}
-                      className="w-full h-full object-cover hover:scale-110 transition duration-700"
-                    />
-                  ))
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400">
-                    No Images
-                  </div>
-                )}
-
-                <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold shadow">
-                  Stock: {p.stock}
-                </div>
+                <p className="mt-4 text-gray-500">Loading products...</p>
               </div>
-
-              {/* INFO */}
-              <div className="p-5 space-y-3">
-
-                <div>
-                  <h3 className="font-black text-lg text-slate-800">
-                    {p.name}
-                  </h3>
-<p className="text-sm text-gray-500 mt-1">
-  Catégorie: {getCategoryName(p.category_id)}
-</p>
-
-                  <p className="text-sm text-gray-500 mt-1">
-                    Barcode: {p.barcode || "N/A"}
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <p className="text-indigo-600 font-black text-xl">
-                    € {p.price}
-                  </p>
-
-                  <p className="text-sm text-gray-500">
-                    Cost: € {p.cost_price}
-                  </p>
-                </div>
-
-                {p.expiration_date && (
-                  <div>
-                    {isExpired(p.expiration_date) ? (
-                      <span className="bg-red-100 text-red-600 text-xs font-bold px-3 py-1 rounded-full">
-                        EXPIRED
-                      </span>
-                    ) : isExpiringSoon(p.expiration_date) ? (
-                      <span className="bg-yellow-100 text-yellow-700 text-xs font-bold px-3 py-1 rounded-full">
-                        Expires Soon
-                      </span>
+            ) : (
+              products.map((p) => (
+                <div
+                  key={p.id}
+                  className="w-full min-w-[170px] bg-white mt-6 overflow-hidden border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 md:p-4 lg:p-5"
+                  
+                >
+                  {/* IMAGE */}
+                  <div className="h-48 bg-gray-100 overflow-hidden relative">
+                    {normalizeImages(p.images).length ? (
+                      normalizeImages(p.images).map((img, i) => (
+                        <img
+                          key={i}
+                          src={img?.url || img}
+                          alt={p.name}
+                          className="w-full h-full object-cover hover:scale-110 transition duration-700"
+                        />
+                      ))
                     ) : (
-                      <span className="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full">
-                        Valid
-                      </span>
+                      <div className="w-full h-full flex items-center justify-center text-gray-400">
+                        No Images
+                      </div>
                     )}
+
+                    <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold shadow">
+                      Stock: {p.stock}
+                    </div>
                   </div>
-                )}
 
-                {/* ACTIONS */}
-                <div className="flex justify-between pt-4 border-t">
+                  {/* INFO */}
+                  <div className="p-1 space-y-2">
+                    <div>
+                      <h3 className="font-black text-base text-slate-800">
+                        {p.name}
+                      </h3>
 
-                  <button
-                    onClick={() => openEdit(p)}
-                    className="flex items-center gap-2 text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-xl transition"
-                  >
-                    <Edit className="h-4 w-4" />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Catégorie: {getCategoryName(p.category_id)}
+                      </p>
 
-                    Edit
-                  </button>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Barcode: {p.barcode || "N/A"}
+                      </p>
+                    </div>
 
-                  <button
-                    onClick={() => handleDelete(p.id)}
-                    className="flex items-center gap-2 text-red-600 hover:bg-red-50 px-4 py-2 rounded-xl transition"
-                  >
-                    <Trash2 className="h-4 w-4" />
+                    <div className="flex items-center justify-between">
+                      <p className="text-indigo-600 font-black text-lg">
+                        € {p.price}
+                      </p>
 
-                    Delete
-                  </button>
+                      <p className="text-xs text-gray-500">
+                        Cost: € {p.cost_price}
+                      </p>
+                    </div>
 
+                    {p.expiration_date && (
+                      <div>
+                        {isExpired(p.expiration_date) ? (
+                          <span className="bg-red-100 text-red-600 text-xs font-bold px-3 py-1 rounded-full">
+                            EXPIRED
+                          </span>
+                        ) : isExpiringSoon(p.expiration_date) ? (
+                          <span className="bg-yellow-100 text-yellow-700 text-xs font-bold px-3 py-1 rounded-full">
+                            Expires Soon
+                          </span>
+                        ) : (
+                          <span className="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full">
+                            Valid
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {/* ACTIONS */}
+                    <div className="flex justify-between pt-3 border-t">
+                      <button
+                        onClick={() => openEdit(p)}
+                        className="flex items-center gap-2 text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-xl transition text-sm"
+                      >
+                        <Edit className="h-4 w-4" />
+                        Edit
+                      </button>
+
+                      <button
+                        onClick={() => handleDelete(p.id)}
+                        className="flex items-center gap-2 text-red-600 hover:bg-red-50 px-3 py-2 rounded-xl transition text-sm"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Delete
+                      </button>
+                    </div>
+                  </div>
                 </div>
-
-              </div>
-            </div>
-          ))
-        )}
+              ))
+            )}
+          </div>
+        </div>
       </div>
 
       {/* MODAL */}
       {showModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 z-50">
-
           <div className="bg-white w-full max-w-5xl rounded-3xl overflow-hidden shadow-2xl max-h-[95vh] overflow-y-auto">
-
             {/* HEADER */}
             <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-5 text-white flex justify-between items-center">
-
               <div>
                 <h2 className="font-black text-2xl">
-                  {editingProduct
-                    ? "Update Product"
-                    : "Create Product"}
+                  {editingProduct ? "Update Product" : "Create Product"}
                 </h2>
 
                 <p className="text-white/80 text-sm">
@@ -584,7 +561,6 @@ export default function ProductManagement() {
               >
                 <X />
               </button>
-
             </div>
 
             {/* FORM */}
@@ -592,7 +568,6 @@ export default function ProductManagement() {
               onSubmit={handleSubmit}
               className="p-5 grid grid-cols-1 lg:grid-cols-2 gap-5"
             >
-
               {/* CATEGORY */}
               <div className="lg:col-span-2">
                 <label className="font-bold text-sm block mb-2 text-gray-700">
@@ -605,15 +580,10 @@ export default function ProductManagement() {
                   onChange={handleChange}
                   className="w-full border-2 border-gray-200 rounded-2xl p-3 outline-none focus:border-indigo-500"
                 >
-                  <option value="">
-                    Select Category
-                  </option>
+                  <option value="">Select Category</option>
 
                   {categories?.map((c) => (
-                    <option
-                      key={c.id}
-                      value={c.id}
-                    >
+                    <option key={c.id} value={c.id}>
                       {c.name}
                     </option>
                   ))}
@@ -642,7 +612,6 @@ export default function ProductManagement() {
                 </label>
 
                 <div className="flex gap-2">
-
                   <input
                     name="barcode"
                     value={form.barcode}
@@ -658,13 +627,11 @@ export default function ProductManagement() {
                   >
                     <Camera className="h-5 w-5" />
                   </button>
-
                 </div>
               </div>
 
               {/* CALCULATOR */}
               <div className="lg:col-span-2 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-3xl p-5 border border-indigo-100">
-
                 <div className="flex items-center gap-2 mb-4">
                   <Calculator className="text-indigo-600" />
 
@@ -674,7 +641,6 @@ export default function ProductManagement() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
                   <div>
                     <label className="text-sm font-bold block mb-2">
                       Quantity
@@ -682,9 +648,7 @@ export default function ProductManagement() {
 
                     <input
                       value={quantity}
-                      onChange={(e) =>
-                        setQuantity(e.target.value)
-                      }
+                      onChange={(e) => setQuantity(e.target.value)}
                       placeholder="Ex: 9"
                       className="w-full border-2 border-gray-200 rounded-2xl p-3 outline-none focus:border-indigo-500"
                     />
@@ -697,9 +661,7 @@ export default function ProductManagement() {
 
                     <input
                       value={unitPrice}
-                      onChange={(e) =>
-                        setUnitPrice(e.target.value)
-                      }
+                      onChange={(e) => setUnitPrice(e.target.value)}
                       placeholder="Ex: 5"
                       className="w-full border-2 border-gray-200 rounded-2xl p-3 outline-none focus:border-indigo-500"
                     />
@@ -712,22 +674,16 @@ export default function ProductManagement() {
 
                     <input
                       value={unitCostPrice}
-                      onChange={(e) =>
-                        setUnitCostPrice(e.target.value)
-                      }
+                      onChange={(e) => setUnitCostPrice(e.target.value)}
                       placeholder="Ex: 2"
                       className="w-full border-2 border-gray-200 rounded-2xl p-3 outline-none focus:border-indigo-500"
                     />
                   </div>
-
                 </div>
 
                 <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
-
                   <div className="bg-white rounded-2xl p-4 shadow-sm">
-                    <p className="text-xs text-gray-500">
-                      Total Stock
-                    </p>
+                    <p className="text-xs text-gray-500">Total Stock</p>
 
                     <h4 className="text-2xl font-black text-indigo-600">
                       {form.stock || 0}
@@ -735,9 +691,7 @@ export default function ProductManagement() {
                   </div>
 
                   <div className="bg-white rounded-2xl p-4 shadow-sm">
-                    <p className="text-xs text-gray-500">
-                      Total Price
-                    </p>
+                    <p className="text-xs text-gray-500">Total Price</p>
 
                     <h4 className="text-2xl font-black text-green-600">
                       € {form.price || 0}
@@ -745,17 +699,13 @@ export default function ProductManagement() {
                   </div>
 
                   <div className="bg-white rounded-2xl p-4 shadow-sm">
-                    <p className="text-xs text-gray-500">
-                      Total Cost
-                    </p>
+                    <p className="text-xs text-gray-500">Total Cost</p>
 
                     <h4 className="text-2xl font-black text-orange-600">
                       € {form.cost_price || 0}
                     </h4>
                   </div>
-
                 </div>
-
               </div>
 
               {/* PRICE */}
@@ -851,27 +801,18 @@ export default function ProductManagement() {
               {/* SUBMIT */}
               <div className="lg:col-span-2">
                 <button className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-2xl font-black text-lg shadow-2xl hover:opacity-90 transition">
-                  {editingProduct
-                    ? "Update Product"
-                    : "Create Product"}
+                  {editingProduct ? "Update Product" : "Create Product"}
                 </button>
               </div>
-
             </form>
-
           </div>
 
           {/* SCANNER MODAL */}
           {showScanner && (
             <div className="fixed inset-0 bg-black/90 z-[60] flex items-center justify-center p-4">
-
               <div className="bg-white rounded-3xl overflow-hidden w-full max-w-md shadow-2xl">
-
                 <div className="flex justify-between items-center p-4 border-b">
-
-                  <h3 className="font-black text-lg">
-                    Barcode Scanner
-                  </h3>
+                  <h3 className="font-black text-lg">Barcode Scanner</h3>
 
                   <button
                     onClick={stopScanner}
@@ -879,11 +820,9 @@ export default function ProductManagement() {
                   >
                     <X />
                   </button>
-
                 </div>
 
                 <div className="p-4">
-
                   <div
                     id="reader"
                     className="w-full overflow-hidden rounded-2xl"
@@ -892,14 +831,10 @@ export default function ProductManagement() {
                   <p className="text-center text-sm text-gray-500 mt-4">
                     Point the camera at the barcode
                   </p>
-
                 </div>
-
               </div>
-
             </div>
           )}
-
         </div>
       )}
     </div>

@@ -2,7 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-
+body, html {
+  margin: 0;
+  padding: 0;
+}
 
 @keyframes float {
   0%, 100% {
@@ -13,9 +16,4 @@
     transform: translateY(-5px);
     box-shadow: 0 15px 30px rgba(99, 102, 241, 0.35);
   }
-}
-
-
-.my-card {
-    padding: 0px;
 }

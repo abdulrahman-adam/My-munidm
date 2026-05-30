@@ -15,6 +15,7 @@ import ForgotPassword from "./pages/auth/ForgotPassword";
 import POS from "./pages/pos/POS";
 import Home from "./pages/home/Home";
 
+
 // IMPORTANT: Outlet fix
 import { Outlet } from "react-router-dom";
 import CashierDashboard from "./pages/cashier/CashierDashboard";
@@ -30,7 +31,7 @@ const Layout = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-800">
       <Navbar />
-      <main className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+      <main className="flex-1 w-full lg:p-8">
         <Outlet />
       </main>
     </div>
@@ -52,8 +53,39 @@ export default function App() {
   }
 
   return (
+    <div style={{ margin: 0, padding: 0, width: "100%" }}>
     <>
-      <Toaster position="top-center" reverseOrder={false} />
+      {/* <Toaster position="top-center" reverseOrder={false} /> */}
+
+<Toaster
+  position="top-center"
+  reverseOrder={false}
+  toastOptions={{
+    duration: 4000,
+    style: {
+      borderRadius: "12px",
+      padding: "14px 18px",
+      fontSize: "14px",
+      fontWeight: "500",
+      boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
+      maxWidth: "90vw",
+    },
+
+    success: {
+      style: {
+        background: "#10B981", // green modern
+        color: "#fff",
+      },
+    },
+
+    error: {
+      style: {
+        background: "#EF4444", // red modern
+        color: "#fff",
+      },
+    },
+  }}
+/>
 
       <Routes>
 
@@ -133,5 +165,9 @@ export default function App() {
 
       </Routes>
     </>
+    </div>
   );
+
+  
 }
+

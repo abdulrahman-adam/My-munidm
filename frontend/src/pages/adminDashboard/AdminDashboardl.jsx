@@ -52,7 +52,10 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="space-y-8" style={{ border: "3px solid green" }}>
+    <div
+  className="px-2 md:px-4 lg:px-10"
+ 
+>
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -75,7 +78,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* ================= CARDS ================= */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mt-8">
         {[
           {
             title: "User Management",
@@ -141,7 +144,7 @@ export default function AdminDashboard() {
       {activeSection && (
         <div
           ref={sectionRef}
-          className="relative bg-white rounded-xl border shadow-sm p-4 md:p-6 transition-all duration-500"
+          className="relative bg-white transition-all duration-500 mt-8"
         >
           {/* BACK BUTTON */}
           <button
@@ -158,7 +161,7 @@ export default function AdminDashboard() {
 
       {/* DEFAULT VIEW */}
       {activeSection === "" && (
-        <div className="bg-white p-6 rounded-xl border shadow-sm">
+        <div className="w-full bg-white py-6 rounded-xl border shadow-sm">
           <h2 className="text-lg font-bold mb-4">Live System Insights</h2>
           <p className="text-gray-400">
             📊 Select a module to manage system data
@@ -173,7 +176,7 @@ export default function AdminDashboard() {
   <div className="relative w-full max-w-lg md:max-w-xl lg:max-w-2xl bg-white shadow-2xl border border-gray-200 rounded-2xl flex flex-col max-h-[95vh]">
 
     {/* HEADER */}
-    <div className="flex items-start justify-between border-b px-5 md:px-6 py-4 flex-shrink-0">
+    <div className="flex items-start justify-between border-b px-5 md:px-6 py-0 flex-shrink-0">
 
       <div>
         <h2 className="text-lg md:text-xl font-bold text-gray-900">
@@ -194,7 +197,7 @@ export default function AdminDashboard() {
     </div>
 
     {/* CONTENT */}
-    <div className="px-5 md:px-6 py-4 flex-1 overflow-hidden">
+    <div className="px-2 md:px-2 py-2 flex-1 overflow-hidden">
       <Register />
     </div>
 
