@@ -215,7 +215,7 @@ useEffect(() => {
           opacity: 1,
           y: 0,
         }}
-        className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 p-8 shadow-2xl"
+        className="relative overflow-hidden border border-white/10 bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 p-8 shadow-2xl"
       >
         {/* Glow Effects */}
         <div className="absolute top-0 left-0 h-72 w-72 rounded-full bg-indigo-600/20 blur-[120px]" />
@@ -260,7 +260,7 @@ useEffect(() => {
               onClick={() =>
                 setShowRegister(true)
               }
-              className="group relative overflow-hidden rounded-2xl px-6 py-4 font-bold text-white shadow-2xl"
+              className="group relative overflow-hidden px-6 py-4 font-bold text-white shadow-2xl"
             >
               <span className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500 transition-all duration-700 group-hover:scale-110" />
 
@@ -343,7 +343,7 @@ useEffect(() => {
             opacity: 1,
             y: 0,
           }}
-          className="xl:col-span-2 rounded-3xl border border-white/10 bg-white/70 backdrop-blur-2xl p-6 shadow-xl"
+          className="xl:col-span-2 border border-white/10 bg-white/70 backdrop-blur-2xl p-6 shadow-xl"
         >
           <div className="flex items-center gap-3 mb-6">
             <div className="p-3 rounded-2xl bg-indigo-500/10">
@@ -447,7 +447,7 @@ useEffect(() => {
           transition={{
             delay: 0.1,
           }}
-          className="rounded-3xl border border-white/10 bg-white/70 backdrop-blur-2xl p-6 shadow-xl"
+          className="border border-white/10 bg-white/70 backdrop-blur-2xl p-6 shadow-xl"
         >
           <div className="flex items-center gap-3 mb-6">
             <div className="p-3 rounded-2xl bg-green-500/10">

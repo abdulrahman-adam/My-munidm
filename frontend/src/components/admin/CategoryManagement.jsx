@@ -136,7 +136,7 @@ try {
 
         <button
           onClick={openCreate}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 transition"
         >
           <Plus className="h-4 w-4" />
           Add Category
@@ -144,12 +144,11 @@ try {
       </div>
 
       {/* GRID */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 md:gap-5">
         {categories?.map((cat) => (
           <div
             key={cat.id}
-            className="bg-white border rounded-xl shadow-sm overflow-hidden"
+            className="bg-white shadow-sm overflow-hidden"
           >
 
           {/* IMAGE */}
@@ -172,9 +171,9 @@ try {
 
             {/* CONTENT */}
             <div className="p-4 space-y-2">
-              <h3 className="font-bold text-lg">{cat.name}</h3>
+              <h3 className="font-bold text-lg">Name: {cat.name}</h3>
               <p className="text-sm text-gray-500">
-                {cat.description || "No description"}
+                Description: {cat.description || "No description"}
               </p>
 
               <div className="flex justify-between pt-2">

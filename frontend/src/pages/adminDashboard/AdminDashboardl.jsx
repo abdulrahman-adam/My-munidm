@@ -71,7 +71,7 @@ export default function AdminDashboard() {
 
         <button
           onClick={() => setShowRegister(true)}
-          className="px-5 py-2.5 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition-all duration-300 hover:scale-105"
+          className="px-5 py-2.5 bg-blue-600 text-white shadow-md hover:bg-blue-700 transition-all duration-300 hover:scale-105"
         >
           + Create User
         </button>
@@ -161,7 +161,7 @@ export default function AdminDashboard() {
 
       {/* DEFAULT VIEW */}
       {activeSection === "" && (
-        <div className="w-full bg-white py-6 rounded-xl border shadow-sm">
+        <div className="w-full bg-white py-6 shadow-sm mt-8 px-4">
           <h2 className="text-lg font-bold mb-4">Live System Insights</h2>
           <p className="text-gray-400">
             📊 Select a module to manage system data
