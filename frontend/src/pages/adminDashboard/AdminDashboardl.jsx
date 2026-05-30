@@ -52,11 +52,9 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="space-y-8">
-
+    <div className="space-y-8" style={{ border: "3px solid green" }}>
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-
         <div>
           <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
             <Settings className="h-7 w-7 text-blue-600 animate-pulse" />
@@ -78,7 +76,6 @@ export default function AdminDashboard() {
 
       {/* ================= CARDS ================= */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-
         {[
           {
             title: "User Management",
@@ -122,22 +119,20 @@ export default function AdminDashboard() {
             className={`
               bg-white p-6 rounded-xl shadow-sm border cursor-pointer
               transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group
-              ${activeSection === card.section
-                ? "border-blue-500 ring-2 ring-blue-100"
-                : "border-gray-100"}
+              ${
+                activeSection === card.section
+                  ? "border-blue-500 ring-2 ring-blue-100"
+                  : "border-gray-100"
+              }
             `}
           >
             <card.icon
               className={`h-8 w-8 ${card.color} mb-4 group-hover:scale-110 transition-transform`}
             />
 
-            <h3 className="text-lg font-bold text-gray-800">
-              {card.title}
-            </h3>
+            <h3 className="text-lg font-bold text-gray-800">{card.title}</h3>
 
-            <p className="text-gray-500 text-sm mt-1">
-              {card.desc}
-            </p>
+            <p className="text-gray-500 text-sm mt-1">{card.desc}</p>
           </div>
         ))}
       </div>
@@ -157,9 +152,7 @@ export default function AdminDashboard() {
           </button>
 
           {/* SECTION CONTENT */}
-          <div className="animate-[fadeIn_0.4s_ease]">
-            {renderSection()}
-          </div>
+          <div className="animate-[fadeIn_0.4s_ease]">{renderSection()}</div>
         </div>
       )}
 
@@ -175,34 +168,38 @@ export default function AdminDashboard() {
 
       {/* REGISTER MODAL */}
       {showRegister && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm py-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+  
+  <div className="relative w-full max-w-lg md:max-w-xl lg:max-w-2xl bg-white shadow-2xl border border-gray-200 rounded-2xl flex flex-col max-h-[95vh]">
 
-          <div className="relative w-full max-w-lg bg-white shadow-2xl border overflow-hidden">
+    {/* HEADER */}
+    <div className="flex items-start justify-between border-b px-5 md:px-6 py-4 flex-shrink-0">
 
-            <div className="flex items-center justify-between border-b px-6 py-5">
+      <div>
+        <h2 className="text-lg md:text-xl font-bold text-gray-900">
+          Create New User
+        </h2>
+        <p className="text-sm text-gray-500">
+          Create cashier, manager, or admin account
+        </p>
+      </div>
 
-              <div>
-                <h2 className="text-xl font-bold">Create New User</h2>
-                <p className="text-sm text-gray-500">
-                  Create cashier, manager, or admin account
-                </p>
-              </div>
+      <button
+        onClick={() => setShowRegister(false)}
+        className="rounded-lg bg-red-100 px-3 py-2 text-sm font-bold text-red-600 transition hover:bg-red-200"
+      >
+        ✕
+      </button>
 
-              <button
-                onClick={() => setShowRegister(false)}
-                className="w-10 h-10 rounded-full bg-gray-100 hover:bg-red-100"
-              >
-                ✕
-              </button>
+    </div>
 
-            </div>
+    {/* CONTENT */}
+    <div className="px-5 md:px-6 py-4 flex-1 overflow-hidden">
+      <Register />
+    </div>
 
-            <div className="max-h-[85vh] overflow-y-auto">
-              <Register />
-            </div>
-
-          </div>
-        </div>
+  </div>
+</div>
       )}
 
       {/* ANIMATION */}
@@ -214,7 +211,6 @@ export default function AdminDashboard() {
           }
         `}
       </style>
-
     </div>
   );
 }

@@ -42,10 +42,10 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8">
+    <div className="overflow-y-auto flex items-start lg:items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8 py-6 lg:py-10">
 
       {/* CARD */}
-      <div className="w-full max-w-md bg-white shadow-xl border border-gray-100 p-4 sm:p-6 lg:p-8 space-y-6">
+      <div className="w-full max-w-md md:max-w-2xl lg:max-w-3xl bg-white shadow-xl border border-gray-100 p-4 sm:p-6 lg:p-8 space-y-6">
 
         {/* HEADER */}
         <div className="text-center">
@@ -57,7 +57,7 @@ export default function Register() {
         {/* FORM */}
         <form className="space-y-4" onSubmit={handleSubmit}>
 
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
             {/* NAME */}
             <div>

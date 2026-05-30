@@ -14,3 +14,8 @@
     box-shadow: 0 15px 30px rgba(99, 102, 241, 0.35);
   }
 }
+
+
+.my-card {
+    padding: 0px;
+}

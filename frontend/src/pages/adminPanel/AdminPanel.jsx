@@ -566,7 +566,7 @@ useEffect(() => {
               opacity: 1,
               y: 0,
             }}
-            className="relative w-full max-w-2xl overflow-hidden rounded-3xl border border-white/10 bg-white p-8 shadow-2xl"
+            className="relative w-full max-w-2xl overflow-hidden rounded-3xl border border-white/10 bg-white shadow-2xl"
           >
             <button
               onClick={() =>
