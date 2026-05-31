@@ -4,6 +4,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  useRef, // ✅ ADDED
 } from "react";
 
 import { useNavigate } from "react-router-dom";
@@ -20,7 +21,6 @@ axios.defaults.withCredentials = true;
 /* =========================================================
    CONTEXT
 ========================================================= */
-
 export const AppContext = createContext();
 
 /* =========================================================
@@ -33,12 +33,19 @@ export const AppContextProvider = ({ children }) => {
 
   const currency = import.meta.env.VITE_CURRENCY || "€";
 
+  
+  /* =========================================================
+     RELOAD GUARDS (🔥 FIX DOUBLE CALLS)
+  ========================================================= */
+  const didInitAuth = useRef(false);
+  const didInitData = useRef(false);
+
   /* =========================================================
      AUTH STATES
   ========================================================= */
 
-const [user, setUser] = useState(null);
-const [users, setUsers] = useState([]);
+  const [user, setUser] = useState(null);
+  const [users, setUsers] = useState([]);
 
   const [token, setToken] = useState(
     localStorage.getItem("token") || ""
@@ -81,90 +88,78 @@ const [lowStock, setLowStock] = useState([]);
     JSON.parse(localStorage.getItem("offlineSales")) || []
   );
 
+
+
+
   /* =========================================================
      AUTO AUTH HEADER
   ========================================================= */
 
-  // Replace your existing interceptor with this:
-// axios.interceptors.request.use(
-//   (config) => {
-//     const currentToken = localStorage.getItem("token"); // Always fetch fresh from storage
-//     if (currentToken) {
-//       config.headers.Authorization = `Bearer ${currentToken}`;
-//     }
-//     return config;
-//   },
-//   (error) => Promise.reject(error)
-// );
 
-axios.interceptors.request.use((config) => {
-  const currentToken = localStorage.getItem("token");
+/* =========================================================
+     CLEAN AXIOS INTERCEPTOR (ONLY ONE)
+  ========================================================= */
 
-  if (currentToken) {
-    config.headers.Authorization = `Bearer ${currentToken}`;
-  }
+  useEffect(() => {
+    const interceptor = axios.interceptors.request.use(
+      (config) => {
+        const currentToken = localStorage.getItem("token");
 
-  return config;
-});
+        if (currentToken) {
+          config.headers.Authorization = `Bearer ${currentToken}`;
+        }
 
-useEffect(() => {
-  const interceptor = axios.interceptors.request.use(
-    (config) => {
-      const currentToken =
-        localStorage.getItem("token");
-
-      if (currentToken) {
-        config.headers.Authorization =
-          `Bearer ${currentToken}`;
-      }
-
-      return config;
-    },
-    (error) => Promise.reject(error)
-  );
-
-  return () => {
-    axios.interceptors.request.eject(
-      interceptor
+        return config;
+      },
+      (error) => Promise.reject(error)
     );
-  };
-}, []);
 
- /* =========================================================
-   AUTO LOGIN ON REFRESH
-========================================================= */
+    return () => {
+      axios.interceptors.request.eject(interceptor);
+    };
+  }, []);
 
-useEffect(() => {
-  const loadUser = async () => {
-    try {
-      const storedToken = localStorage.getItem("token");
 
-      if (!storedToken) {
+  /* =========================================================
+     AUTO LOGIN ON REFRESH (FIXED DOUBLE CALL)
+  ========================================================= */
+
+  useEffect(() => {
+    if (didInitAuth.current) return;
+    didInitAuth.current = true;
+
+    const loadUser = async () => {
+      try {
+        const storedToken = localStorage.getItem("token");
+
+        if (!storedToken) {
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+
+        const res = await axios.get("/api/auth/me", {
+          headers: {
+            Authorization: `Bearer ${storedToken}`,
+          },
+        });
+
+        setUser(res.data.user);
+      } catch (error) {
+        console.log("Auth load failed:", error);
+        localStorage.removeItem("token");
         setUser(null);
+      } finally {
         setLoading(false);
-        return;
       }
+    };
 
-      const res = await axios.get("/api/auth/me", {
-        headers: {
-          Authorization: `Bearer ${storedToken}`,
-        },
-      });
+    loadUser();
+  }, []);
 
-      setUser(res.data.user);
-    } catch (error) {
-      console.log("Auth load failed:", error);
 
-      // invalid or expired token → clean logout
-      localStorage.removeItem("token");
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  loadUser();
-}, []);
+
 
   /* =========================================================
      SAVE CART
@@ -248,13 +243,14 @@ const login = async (data) => {
 
 
   // LOGOUT
-const logout = () => {
-  setUser(null);
-  setToken(null);
-  localStorage.removeItem("token");
-  toast.success("Logged out");
-   navigate("/");
-};
+  const logout = () => {
+    setUser(null);
+    setToken(""); // 🔥 FIX (was null → can break checks)
+    localStorage.removeItem("token");
+    toast.success("Logged out");
+    navigate("/");
+  };
+
 
   /* =========================================================
      OTP AUTH
@@ -1456,21 +1452,23 @@ const downloadReport = async () => {
 useEffect(() => {
   if (!token || !user?.role) return;
 
- const loadInitialData = async () => {
-  const role = user?.role?.toUpperCase();
+  const loadInitialData = async () => {
+    const role = user.role.toUpperCase();
 
-  await getProducts();
+    // Available for all authenticated users
+    await getProducts();
 
-  const lowStockData = await getLowStockProducts();
-  const usersData = await getUsers();
+    // Admin / Manager only
+    if (role === "ADMIN" || role === "MANAGER") {
+      const lowStockData = await getLowStockProducts();
+      const usersData = await getUsers();
 
-  console.log("FINAL LOW STOCK:", lowStockData);
-  console.log("FINAL USERS:", usersData);
+      console.log("FINAL LOW STOCK:", lowStockData);
+      console.log("FINAL USERS:", usersData);
 
-  if (role === "ADMIN" || role === "MANAGER") {
-    await getAllSales();
-  }
-};
+      await getAllSales();
+    }
+  };
 
   loadInitialData();
 }, [token, user?.role]);
